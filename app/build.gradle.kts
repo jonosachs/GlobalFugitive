@@ -95,6 +95,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.play.services.maps)
     implementation(libs.maps)
+//    implementation(libs.androidx.ui.desktop)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -104,14 +105,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation(libs.volley)
-
-//    // Google Maps Compose library
-//    val mapsComposeVersion = "4.4.1"
-//    implementation(libs.maps.compose)
-//    // Google Maps Compose utility library
-//    implementation(libs.maps.compose.utils)
-//    // Google Maps Compose widgets library
-//    implementation(libs.maps.compose.widgets)
 
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core)
@@ -135,6 +128,9 @@ dependencies {
     // Kotlin Coroutines Play Services (for Google APIs)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.0")
 
-
     implementation("com.google.maps.android:maps-ktx:3.3.0")
+
+    //Gson
+    implementation("com.google.code.gson:gson:2.8.8")
+
 }

@@ -36,9 +36,11 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
+        val gameViewModel = GameViewModel(application)
+
         setContent {
             AppTheme(dynamicColor = false){
-                AppNavigation()
+                AppNavigation(viewModel = gameViewModel)
             }
 
         }

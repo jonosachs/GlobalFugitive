@@ -1,71 +1,61 @@
 package com.example.globalfugitive
 
 import GoogleMapsScreen
-import android.graphics.Paint.Align
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathSegment
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.SemanticsProperties.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.globalfugitive.ui.theme.outlineDark
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.example.globalfugitive.getCountryPredictions
-import com.example.globalfugitive.getLatLngFromPrediction
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.ImeAction.Companion.Done
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 
 @Composable
 fun GamePlayScreen(
-    navController: NavController
-
+    navController: NavController,
+    viewModel: GameViewModel
 ) {
+
+    //start a new game
+    LaunchedEffect(Unit) { viewModel.startNewGame() }
 
     val context = LocalContext.current
     val placesClient: PlacesClient = remember { Places.createClient(context) }
@@ -73,10 +63,16 @@ fun GamePlayScreen(
     var predictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) } // Shared selected location
     val coroutineScope = rememberCoroutineScope()
+    var lazyColumnVisible by remember { mutableStateOf(true) }
+    val targets by viewModel.targets
+    val mysteryCountry by viewModel.mysteryCountry
+
+    // Debugging
+    println("mysteryCountry = $mysteryCountry")
 
     // Define a CameraPositionState to control the map camera
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(1.3521, 103.8198), 0f) // Initial position (e.g., Singapore)
+        position = CameraPosition.fromLatLngZoom(LatLng(1.3521, 103.8198), 0f) // Initial position
     }
 
     // Update predictions whenever the search query changes
@@ -128,7 +124,6 @@ fun GamePlayScreen(
                 verticalAlignment = Alignment.Bottom
 
             ) {
-
                 Image(
                     painter = painterResource(id = R.drawable.authority_face_1),
                     contentDescription = "Authority face calm",
@@ -137,13 +132,48 @@ fun GamePlayScreen(
                         .align(Alignment.Bottom)
                 )
 
-                Image(
-                    painter = painterResource(id = R.drawable.notepad),
-                    contentDescription = "Notepad",
+                //Box for second image and overlay text
+                Box(
                     modifier = Modifier
                         .height(175.dp)
-                        .align(Alignment.Bottom)
-                )
+                        .fillMaxWidth()
+                        .align(Alignment.Bottom),
+                ) {
+
+                    //TODO: Align notepad image beneath text
+                    Image(
+                        painter = painterResource(id = R.drawable.notepad),
+                        contentDescription = "Notepad",
+                        modifier = Modifier
+                            .height(175.dp)
+                    )
+
+                    //Text column
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Targets",
+                            modifier = Modifier,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            textDecoration = TextDecoration.Underline,
+                        )
+
+                        targets.forEachIndexed{ index, target ->
+                            Text(
+                                modifier = Modifier,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                text = "${index + 1}. $target",
+                            )
+                        }
+                    }
+                }
+
             }
 
 
@@ -177,12 +207,14 @@ fun GamePlayScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { newValue ->
+                        lazyColumnVisible = true
                         searchQuery = newValue
                     },
                     placeholder = { Text("Select Country..") },
 //                    modifier = Modifier.weight(1f)
                 )
 
+                //TODO: Refuse button click on non-Country
                 Button(
                     onClick = {
                         coroutineScope.launch {
@@ -202,6 +234,12 @@ fun GamePlayScreen(
                                         println("Failed to get LatLng from prediction.")
                                     }
                                 }
+
+                                if(viewModel.gameEnd(searchQuery)) {
+                                    println("gameWon value @ GamePlayScreen: ${viewModel.gameWon.value}")
+                                    navController.navigate("EndGame")
+                                }
+                                else (viewModel.addGuess(searchQuery))
                             }
                         }
                     },
@@ -213,33 +251,46 @@ fun GamePlayScreen(
             }
 
             //Display predictions
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-//                        .weight(1f, fill = false)
-            ) {
-                items(predictions.size) { index ->
-                    val prediction = predictions[index]
-                    Text(
-                        text = prediction.getFullText(null).toString(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                coroutineScope.launch {
-                                    // Handle the click event, e.g., update map position
-                                    val latLng = getLatLngFromPrediction(context, prediction)
-                                    println("Selected LatLng: $latLng")
-                                    if (latLng != null) {
-                                        //Update camera position
-                                        selectedLocation = latLng
+            if (lazyColumnVisible) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(70.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    items(predictions.size) { index ->
+                        val prediction = predictions[index]
+                        Text(
+                            text = prediction.getFullText(null).toString(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .clickable {
+                                    coroutineScope.launch {
+                                        // Handle the click event, e.g., update map position
+                                        val latLng = getLatLngFromPrediction(context, prediction)
+                                        println("Selected LatLng: $latLng")
+                                        if (latLng != null) {
+                                            //Update camera position
+                                            selectedLocation = latLng
+                                            searchQuery = prediction
+                                                .getPrimaryText(null)
+                                                .toString()
+                                            lazyColumnVisible = false
+
+                                            if (viewModel.gameEnd(searchQuery)) {
+                                                navController.navigate("EndGame")
+                                            } else (viewModel.addGuess(searchQuery))
+                                        }
 
                                     }
                                 }
-                            }
-                            .padding(2.dp)
-                    )
-                }
-            }
+                                .padding(3.dp),
+
+                        )
+                    }
+                } //close lazy column
+            } //close if statement
         } //close outer column
     } //close outer box
 
