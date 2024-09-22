@@ -45,7 +45,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.sp
 
 
 @Composable
@@ -55,7 +55,9 @@ fun GamePlayScreen(
 ) {
 
     //start a new game
-    LaunchedEffect(Unit) { viewModel.startNewGame() }
+    LaunchedEffect(Unit) {
+        viewModel.startNewGame()
+    }
 
     val context = LocalContext.current
     val placesClient: PlacesClient = remember { Places.createClient(context) }
@@ -124,12 +126,23 @@ fun GamePlayScreen(
                 verticalAlignment = Alignment.Bottom
 
             ) {
+                var imgId: Int? = null
+                when(targets.size) {
+                1 -> imgId = R.drawable.authority_face_2
+                2 -> imgId = R.drawable.authority_face_3
+                3 -> imgId = R.drawable.authority_face_4
+                4 -> imgId = R.drawable.authority_face_5
+                5 -> imgId = R.drawable.authority_face_5
+                    else -> {imgId = R.drawable.authority_face_1}
+                }
+
                 Image(
-                    painter = painterResource(id = R.drawable.authority_face_1),
-                    contentDescription = "Authority face calm",
+                    painter = painterResource(id = imgId),
+                    contentDescription = "Authority face",
                     modifier = Modifier
                         .height(150.dp)
                         .align(Alignment.Bottom)
+                        .offset(x=40.dp)
                 )
 
                 //Box for second image and overlay text
@@ -139,14 +152,13 @@ fun GamePlayScreen(
                         .fillMaxWidth()
                         .align(Alignment.Bottom),
                 ) {
-
-                    //TODO: Align notepad image beneath text
-                    Image(
-                        painter = painterResource(id = R.drawable.notepad),
-                        contentDescription = "Notepad",
-                        modifier = Modifier
-                            .height(175.dp)
-                    )
+//                    Image(
+//                        painter = painterResource(id = R.drawable.notepad),
+//                        contentDescription = "Notepad",
+//                        modifier = Modifier
+//                            .align(alignment = Alignment.Center)
+//                            .width(400.dp)
+//                    )
 
                     //Text column
                     Column(
@@ -157,7 +169,6 @@ fun GamePlayScreen(
                     ) {
                         Text(
                             text = "Targets",
-                            modifier = Modifier,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             textDecoration = TextDecoration.Underline,
@@ -165,9 +176,9 @@ fun GamePlayScreen(
 
                         targets.forEachIndexed{ index, target ->
                             Text(
-                                modifier = Modifier,
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
                                 text = "${index + 1}. $target",
                             )
                         }
@@ -190,7 +201,8 @@ fun GamePlayScreen(
                 ) {
                 GoogleMapsScreen(
                     cameraPositionState = cameraPositionState,
-                    selectedLocation = selectedLocation
+                    selectedLocation = selectedLocation,
+                    viewModel = viewModel,
                 )
             }
 
@@ -230,16 +242,22 @@ fun GamePlayScreen(
                                     if (latLng != null) {
                                         println("Updating selected location to: $latLng")
                                         selectedLocation = latLng // Update the selected location
+
+                                        // Add guess to list of prior guesses if valid
+                                        viewModel.addGuess(searchQuery, latLng)
+
+                                        // Check if game over conditions met
+                                        if(viewModel.gameEnd(searchQuery)) {
+                                            println("gameWon value @ GamePlayScreen: ${viewModel.gameWon.value}")
+                                            navController.navigate("EndGame")
+                                        }
+
                                     } else {
                                         println("Failed to get LatLng from prediction.")
                                     }
                                 }
 
-                                if(viewModel.gameEnd(searchQuery)) {
-                                    println("gameWon value @ GamePlayScreen: ${viewModel.gameWon.value}")
-                                    navController.navigate("EndGame")
-                                }
-                                else (viewModel.addGuess(searchQuery))
+
                             }
                         }
                     },
@@ -278,9 +296,6 @@ fun GamePlayScreen(
                                                 .toString()
                                             lazyColumnVisible = false
 
-                                            if (viewModel.gameEnd(searchQuery)) {
-                                                navController.navigate("EndGame")
-                                            } else (viewModel.addGuess(searchQuery))
                                         }
 
                                     }

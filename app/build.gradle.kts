@@ -3,12 +3,12 @@ import java.io.FileInputStream
 import java.util.Properties
 
 // Load secrets.properties file
-val secretsPropertiesFile = rootProject.file("secrets.properties")
-val secretsProperties = Properties()
-
-if (secretsPropertiesFile.exists()) {
-    secretsProperties.load(FileInputStream(secretsPropertiesFile))
-}
+//val secretsPropertiesFile = rootProject.file("secrets.properties")
+//val secretsProperties = Properties()
+//
+//if (secretsPropertiesFile.exists()) {
+//    secretsProperties.load(FileInputStream(secretsPropertiesFile))
+//}
 
 plugins {
     alias(libs.plugins.android.application)
@@ -44,8 +44,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        manifestPlaceholders["MAPS_API_KEY"] = secretsProperties["MAPS_API_KEY"] as String
-        buildConfigField("String", "MAPS_API_KEY", "\"${secretsProperties["MAPS_API_KEY"]}\"")
+//        manifestPlaceholders["MAPS_API_KEY"] = secretsProperties["MAPS_API_KEY"] as String
+//        buildConfigField("String", "MAPS_API_KEY", "\"${secretsProperties["MAPS_API_KEY"]}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
