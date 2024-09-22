@@ -126,6 +126,8 @@ fun GamePlayScreen(
                 verticalAlignment = Alignment.Bottom
 
             ) {
+                // Graphic face response
+                //TODO: Face response based on distance from mystery country
                 var imgId: Int? = null
                 when(targets.size) {
                 1 -> imgId = R.drawable.authority_face_2
@@ -152,13 +154,14 @@ fun GamePlayScreen(
                         .fillMaxWidth()
                         .align(Alignment.Bottom),
                 ) {
-//                    Image(
-//                        painter = painterResource(id = R.drawable.notepad),
-//                        contentDescription = "Notepad",
-//                        modifier = Modifier
-//                            .align(alignment = Alignment.Center)
-//                            .width(400.dp)
-//                    )
+                    //TODO: Larger notepad image required
+                    Image(
+                        painter = painterResource(id = R.drawable.notepad),
+                        contentDescription = "Notepad",
+                        modifier = Modifier
+                            .align(alignment = Alignment.Center)
+                            .width(400.dp)
+                    )
 
                     //Text column
                     Column(
@@ -199,6 +202,8 @@ fun GamePlayScreen(
                 verticalAlignment = Alignment.Top,
 
                 ) {
+
+                //TODO: Fit google maps screen to canvas to show entire world
                 GoogleMapsScreen(
                     cameraPositionState = cameraPositionState,
                     selectedLocation = selectedLocation,
@@ -216,6 +221,7 @@ fun GamePlayScreen(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
+
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { newValue ->
@@ -226,7 +232,7 @@ fun GamePlayScreen(
 //                    modifier = Modifier.weight(1f)
                 )
 
-                //TODO: Refuse button click on non-Country
+
                 Button(
                     onClick = {
                         coroutineScope.launch {
@@ -257,9 +263,12 @@ fun GamePlayScreen(
                                     }
                                 }
 
+                                // Reset text field to blank after guess
+                                searchQuery = ""
 
                             }
                         }
+
                     },
                     modifier = Modifier
                         .width(70.dp)
@@ -336,5 +345,6 @@ fun GamePlayScreen(
         } //close row
     } //close box
 } //close composable
+
 
 
