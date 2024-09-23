@@ -71,7 +71,8 @@ fun EndGame(navController: NavController, viewModel: GameViewModel) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "You found the fugitive! \nThey were hiding in $mysteryCountry",
+                text = "You found the fugitive!\nThey were hiding in $mysteryCountry",
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
             )
@@ -79,12 +80,15 @@ fun EndGame(navController: NavController, viewModel: GameViewModel) {
             Image(
                 painter = painterResource(id = R.drawable.fugitive_escaped),
                 contentDescription = "Fugitive escaped image",
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "The fugitive got away!.. \nThey were hiding in $mysteryCountry",
+                text = "The fugitive got away!..\nThey were hiding in $mysteryCountry",
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
             )
@@ -97,11 +101,10 @@ fun EndGame(navController: NavController, viewModel: GameViewModel) {
             modifier = Modifier.width(200.dp),
         ) {
             Text("Play again")
-
         }
         Button(
             onClick = { /*TODO quit action*/ },
-            modifier = Modifier.width(200.dp),
+            modifier = Modifier.width(200.dp)
         ) {
             Text("Quit")
         }

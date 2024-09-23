@@ -3,6 +3,7 @@ package com.example.globalfugitive
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -33,7 +34,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun gameEnd(guess: String): Boolean {
         return when {
-            guess.lowercase() == mysteryCountry.value.toString().lowercase() -> {
+            correctGuess(guess) -> {
                 gameWon.value = true
                 println("gameWon value @ GameViewModel: $gameWon")
                 true
@@ -45,6 +46,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             }
             else -> false
         }
+    }
+
+    fun correctGuess(guess: String): Boolean {
+        return guess.lowercase() == mysteryCountry.value.toString().lowercase()
     }
 
     fun validGuess(guess: String): Boolean {
@@ -61,8 +66,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val distance = haversineDistance(lat1, long1, lat2, long2)
 
         if(validGuess(guess)) {
-            targets.value += "$guess ${distance}km"
-            guessesLatLng.value += guessLatLng
+            if (correctGuess(guess)) {
+                targets.value += "$guess 0km  ✅"
+            }
+            else {
+                targets.value += "$guess ${distance}km  ❌"
+                guessesLatLng.value += guessLatLng
+            }
+
         }
     }
 

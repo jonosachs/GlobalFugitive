@@ -26,6 +26,20 @@ fun MainMenu(
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.world_map),
+            contentDescription = "",
+            modifier = Modifier
+                .align(Alignment.Center)
+                .graphicsLayer(
+                    scaleX = 3f,
+                    scaleY = 3f
+                )
+        )
+    }
+    Box(
+        modifier = Modifier.fillMaxSize()
     )
     {
         Row(
@@ -33,7 +47,7 @@ fun MainMenu(
             horizontalArrangement = Arrangement.Absolute.Left
         ) {
             Image(
-                painter = painterResource(id = R.drawable.global_fugitive_text),
+                painter = painterResource(id = R.drawable.global_fugitive_text_transp),
                 contentDescription = "Global Fugitive text",
                 modifier = Modifier
                     .height(100.dp)
@@ -78,4 +92,5 @@ fun MainMenu(
                 .align(Alignment.BottomCenter)
         )
     }
+
 }

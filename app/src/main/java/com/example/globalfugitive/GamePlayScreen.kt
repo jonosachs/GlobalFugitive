@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,9 +19,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -48,6 +52,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GamePlayScreen(
     navController: NavController,
@@ -86,197 +91,240 @@ fun GamePlayScreen(
         }
     }
 
+    //Maps box
+    Box(
+        modifier = Modifier
+        .fillMaxSize()
+    ){
+        //Google maps row
+        //TODO: Fit google maps screen to canvas to show entire world
+        GoogleMapsScreen(
+            cameraPositionState = cameraPositionState,
+            selectedLocation = selectedLocation,
+            viewModel = viewModel,
+        )
+    }
+
+    //Footer box
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Column (
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter), // Aligns the column to the bottom center of the box
+            verticalArrangement = Arrangement.Bottom
+
+        ) {
+            //Footer
+            Image(
+                painter = painterResource(id = R.drawable.heatmap_footer),
+                contentDescription = "Footer image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer(
+                        scaleX = 1.1f,
+                        scaleY = 1.1f
+                    )
+            )
+        }
+
+    } //close footer box
+
     //Main content box
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
+        //Header row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopStart),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.Top
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.global_fugitive_text_transp_white),
+                contentDescription = "Global Fugitive text",
+                modifier = Modifier
+                    .height(100.dp)
+                    .align(Alignment.Top)
+                    .offset(y = 25.dp)
+            )
+        }
 
-        //Main content column
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+        //Face response and text row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 135.dp)
+                .align(Alignment.BottomCenter),
+//            horizontalArrangement = Arrangement.Center,
+//            verticalAlignment = Alignment.CenterVertically
 
         ) {
-            //Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.Start),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.Top
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.global_fugitive_text),
-                    contentDescription = "Global Fugitive text",
-                    modifier = Modifier
-                        .height(100.dp)
-                        .align(Alignment.Top)
-                        .offset(y = 25.dp)
-                )
+
+            //TODO: Face response based on distance from mystery country
+            var imgId: Int? = null
+            when (targets.size) {
+                2 -> imgId = R.drawable.authority_face_2_transp
+                3 -> imgId = R.drawable.authority_face_3_transp
+                4 -> imgId = R.drawable.authority_face_4_transp
+                5 -> imgId = R.drawable.authority_face_4_transp
+                else -> {
+                    imgId = R.drawable.authority_face_1_transp
+                }
             }
 
-            //Graphic Panel Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(0.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.Bottom
-
+            //Face image
+            Column(
+//                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Graphic face response
-                //TODO: Face response based on distance from mystery country
-                var imgId: Int? = null
-                when(targets.size) {
-                1 -> imgId = R.drawable.authority_face_2
-                2 -> imgId = R.drawable.authority_face_3
-                3 -> imgId = R.drawable.authority_face_4
-                4 -> imgId = R.drawable.authority_face_5
-                5 -> imgId = R.drawable.authority_face_5
-                    else -> {imgId = R.drawable.authority_face_1}
-                }
-
                 Image(
                     painter = painterResource(id = imgId),
                     contentDescription = "Authority face",
                     modifier = Modifier
-                        .height(150.dp)
-                        .align(Alignment.Bottom)
-                        .offset(x=40.dp)
-                )
-
-                //Box for second image and overlay text
-                Box(
-                    modifier = Modifier
                         .height(175.dp)
-                        .fillMaxWidth()
-                        .align(Alignment.Bottom),
-                ) {
-                    //TODO: Larger notepad image required
-                    Image(
-                        painter = painterResource(id = R.drawable.notepad),
-                        contentDescription = "Notepad",
+                        .offset(x = 30.dp)
+                )
+            }
+
+            //Text
+            Column(
+//                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (targets.isNotEmpty()) {
+                    Text(
+                        text = "Targets",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        textDecoration = TextDecoration.Underline,
                         modifier = Modifier
-                            .align(alignment = Alignment.Center)
-                            .width(400.dp)
+                            .offset(x = 30.dp)
+
                     )
+                }
 
-                    //Text column
-                    Column(
+                targets.forEachIndexed { index, target ->
+                    Text(
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        text = "${index + 1}. $target",
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Targets",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            textDecoration = TextDecoration.Underline,
-                        )
+                            .offset(x = 30.dp)
 
-                        targets.forEachIndexed{ index, target ->
-                            Text(
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                text = "${index + 1}. $target",
-                            )
+                    )
+                }
+            }
+
+            //Nested guesses text column
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(bottom = 100.dp),
+//                horizontalAlignment = Alignment.CenterHorizontally,
+//                verticalArrangement = Arrangement.Bottom
+//            ) {
+//
+//            }
+        } // Close face response and text row
+
+        //Guess entry row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 60.dp)
+                .align(Alignment.BottomCenter),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+
+        ) {
+
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { newValue ->
+                    lazyColumnVisible = true
+                    searchQuery = newValue
+                },
+                placeholder = {
+                    Text(
+                        text = "Select Country..",
+                        style = TextStyle(
+                            color = Color.White
+                        )
+                    )
+                },
+                textStyle = TextStyle(
+                    color = Color.White
+                ),
+            )
+
+            TextButton(
+                onClick = {
+                    coroutineScope.launch {
+                        // Perform the search or update predictions based on searchQuery
+                        if (searchQuery.isNotBlank()) {
+                            predictions = getCountryPredictions(placesClient, searchQuery)
+                            println("Search submitted with text: $searchQuery")
+
+                            // Update the selected location with the first prediction (if available)
+                            if (predictions.isNotEmpty()) {
+                                val firstPrediction = predictions[0]
+                                val latLng = getLatLngFromPrediction(context, firstPrediction)
+                                if (latLng != null) {
+                                    println("Updating selected location to: $latLng")
+                                    selectedLocation = latLng // Update the selected location
+
+                                    // Add guess to list of prior guesses if valid
+                                    viewModel.addGuess(searchQuery, latLng)
+
+                                    // Check if game over conditions met
+                                    if (viewModel.gameEnd(searchQuery)) {
+                                        println("gameWon value @ GamePlayScreen: ${viewModel.gameWon.value}")
+                                        navController.navigate("EndGame")
+                                    }
+
+                                } else {
+                                    println("Failed to get LatLng from prediction.")
+                                }
+                            }
+
+                            // Reset text field to blank after guess
+                            searchQuery = ""
+
                         }
                     }
-                }
 
-            }
-
-
-            //Google maps row
-            Row(
+                },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(0.dp)
-                    .height(350.dp)
-                    .border(width = 1.dp, color = Color.Black),
-
-                verticalAlignment = Alignment.Top,
-
-                ) {
-
-                //TODO: Fit google maps screen to canvas to show entire world
-                GoogleMapsScreen(
-                    cameraPositionState = cameraPositionState,
-                    selectedLocation = selectedLocation,
-                    viewModel = viewModel,
-                )
-            }
-
-            Spacer(modifier = Modifier.height(5.dp))
-
-            //Search bar row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .align(alignment = Alignment.CenterVertically)
             ) {
-
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { newValue ->
-                        lazyColumnVisible = true
-                        searchQuery = newValue
-                    },
-                    placeholder = { Text("Select Country..") },
-//                    modifier = Modifier.weight(1f)
+                Text(
+                    text = "✈",
+                    style = TextStyle(
+                        fontSize = 50.sp,
+                        color = Color.White
+                    )
                 )
-
-
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            // Perform the search or update predictions based on searchQuery
-                            if (searchQuery.isNotBlank()) {
-                                predictions = getCountryPredictions(placesClient, searchQuery)
-                                println("Search submitted with text: $searchQuery")
-
-                                // Update the selected location with the first prediction (if available)
-                                if (predictions.isNotEmpty()) {
-                                    val firstPrediction = predictions[0]
-                                    val latLng = getLatLngFromPrediction(context, firstPrediction)
-                                    if (latLng != null) {
-                                        println("Updating selected location to: $latLng")
-                                        selectedLocation = latLng // Update the selected location
-
-                                        // Add guess to list of prior guesses if valid
-                                        viewModel.addGuess(searchQuery, latLng)
-
-                                        // Check if game over conditions met
-                                        if(viewModel.gameEnd(searchQuery)) {
-                                            println("gameWon value @ GamePlayScreen: ${viewModel.gameWon.value}")
-                                            navController.navigate("EndGame")
-                                        }
-
-                                    } else {
-                                        println("Failed to get LatLng from prediction.")
-                                    }
-                                }
-
-                                // Reset text field to blank after guess
-                                searchQuery = ""
-
-                            }
-                        }
-
-                    },
-                    modifier = Modifier
-                        .width(70.dp)
-                ) {
-                    Text("Go")
-                }
             }
 
+        }
+
+        //Lazy column row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+//                .padding(bottom = 50.dp)
+                .align(Alignment.BottomCenter),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+
+        ) {
             //Display predictions
             if (lazyColumnVisible) {
                 LazyColumn(
@@ -289,6 +337,7 @@ fun GamePlayScreen(
                         val prediction = predictions[index]
                         Text(
                             text = prediction.getFullText(null).toString(),
+                            style = TextStyle(color = Color.White),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight()
@@ -299,7 +348,7 @@ fun GamePlayScreen(
                                         println("Selected LatLng: $latLng")
                                         if (latLng != null) {
                                             //Update camera position
-                                            selectedLocation = latLng
+                                            //                                            selectedLocation = latLng
                                             searchQuery = prediction
                                                 .getPrimaryText(null)
                                                 .toString()
@@ -310,40 +359,12 @@ fun GamePlayScreen(
                                     }
                                 }
                                 .padding(3.dp),
-
                         )
                     }
-                } //close lazy column
-            } //close if statement
-        } //close outer column
-    } //close outer box
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize(),
-    ) {
-        //Footer
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.Bottom
-        ) {
-
-            Image(
-                painter = painterResource(id = R.drawable.heatmap_footer),
-                contentDescription = "Footer image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .graphicsLayer(
-                        scaleX = 1.1f,
-                        scaleY = 1.1f
-                    ),
-
-                )
-        } //close row
-    } //close box
+                }
+            }
+        } //close lazy column row
+    } //close main content box
 } //close composable
 
 

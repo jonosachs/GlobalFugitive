@@ -2,6 +2,7 @@
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -62,17 +63,19 @@ fun GoogleMapsScreen(
     // Composable UI with a map and button to launch search
     Box(modifier = Modifier
         .padding(0.dp)
+        .fillMaxWidth()
     ) {
         // Google Map Composable
 
         GoogleMap(
             modifier = Modifier
-                .padding(0.dp),
+                .padding(0.dp)
+                .fillMaxWidth(),
             properties = mapProperties,
             cameraPositionState = cameraPositionState,
             uiSettings = MapUiSettings(
                 compassEnabled = false,
-                zoomControlsEnabled = true,
+                zoomControlsEnabled = false,
                 zoomGesturesEnabled = true,
                 rotationGesturesEnabled = false,
                 mapToolbarEnabled = false,

@@ -95,7 +95,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.play.services.maps)
     implementation(libs.maps)
-//    implementation(libs.androidx.ui.desktop)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
