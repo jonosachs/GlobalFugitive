@@ -11,11 +11,18 @@ if (secretsPropertiesFile.exists()) {
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.jetbrains.kotlin.android) apply false
+
+    //Firebase
+    // Add the dependency for the Google services Gradle plugin
+    id("com.google.gms.google-services") version "4.4.2" apply false
+
 }
 
 buildscript {
     dependencies {
-        classpath("com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.1")
+        classpath(libs.secrets.gradle.plugin)
+        // Add Hilt plugin classpath here
+//        classpath(libs.hilt.android.gradle.plugin)
     }
 
 }

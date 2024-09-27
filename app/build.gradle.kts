@@ -1,20 +1,25 @@
 import com.android.build.api.variant.BuildConfigField
+//import sun.awt.FontConfiguration.verbose
 import java.io.FileInputStream
 import java.util.Properties
 
-// Load secrets.properties file
-//val secretsPropertiesFile = rootProject.file("secrets.properties")
-//val secretsProperties = Properties()
-//
-//if (secretsPropertiesFile.exists()) {
-//    secretsProperties.load(FileInputStream(secretsPropertiesFile))
-//}
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
 
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+
+    //Firebase
+    // Add the Google services Gradle plugin
+    id("com.google.gms.google-services")
+
+
+//    id("com.google.dagger.hilt.android")
+////    id("com.android.application")
+//    id("kotlin-android")
+//    id("kotlin-kapt")
+
 }
 
 
@@ -32,7 +37,7 @@ secrets {
 
 android {
     namespace = "com.example.globalfugitive"
-    compileSdk = 34
+    compileSdk = 35
 
     // Enable Build Features
     android.buildFeatures.buildConfig = true
@@ -40,7 +45,8 @@ android {
     defaultConfig {
         applicationId = "com.example.globalfugitive"
         minSdk = 24
-        targetSdk = 34
+        //noinspection EditedTargetSdkVersion
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -95,6 +101,11 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.play.services.maps)
     implementation(libs.maps)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.storage.ktx)
+//    implementation(libs.androidx.media3.common.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -117,20 +128,42 @@ dependencies {
 
     implementation(libs.maps.compose.v2110) // latest version
 
-    implementation("com.google.android.libraries.places:places:3.1.0")
+    implementation(libs.places.v310)
 
     // Kotlin Coroutines Core Library
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+    implementation(libs.kotlinx.coroutines.core)
 
     // Kotlin Coroutines for Android
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    implementation(libs.kotlinx.coroutines.android)
 
     // Kotlin Coroutines Play Services (for Google APIs)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.0")
+    implementation(libs.kotlinx.coroutines.play.services)
 
-    implementation("com.google.maps.android:maps-ktx:3.3.0")
+    implementation(libs.maps.ktx)
 
     //Gson
-    implementation("com.google.code.gson:gson:2.8.8")
+    implementation(libs.gson)
+
+    //Credential Manager
+//    implementation(libs.androidx.credentials)
+    // optional - needed for credentials support from play services, for devices running
+    // Android 13 and below.
+//    implementation("androidx.credentials:credentials-play-services-auth:1.5.0-alpha05")
+
+    // Import the Firebase BoM
+    implementation(platform(libs.firebase.bom))
+
+    // Add the dependency for the Firebase Authentication library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation(libs.firebase.auth)
+
+//    implementation(libs.androidx.hilt.navigation.compose)
+//    implementation(libs.hilt.android)
+//    kapt(libs.hilt.android.compiler)
+
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+
+    // coil
+    implementation(libs.coil.compose.v222)
 
 }

@@ -58,7 +58,7 @@ fun Landing (navController: NavController) {
             )
 
             Button(
-                onClick = { navController.navigate("MainMenu") },
+                onClick = { navController.navigate("SignInScreen") },
                 modifier = Modifier
                     .width(200.dp)
             ) {

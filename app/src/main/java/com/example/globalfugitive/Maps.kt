@@ -41,7 +41,7 @@ fun GoogleMapsScreen(
     // Load map style from json
     val mapProperties = remember {
         MapProperties(
-            mapStyleOptions = MapStyleOptions.loadRawResourceStyle(context, R.raw.custom_map)
+            mapStyleOptions = MapStyleOptions.loadRawResourceStyle(context, R.raw.custom_map),
         )
     }
 
@@ -67,6 +67,8 @@ fun GoogleMapsScreen(
     ) {
         // Google Map Composable
 
+
+
         GoogleMap(
             modifier = Modifier
                 .padding(0.dp)
@@ -79,7 +81,7 @@ fun GoogleMapsScreen(
                 zoomGesturesEnabled = true,
                 rotationGesturesEnabled = false,
                 mapToolbarEnabled = false,
-                scrollGesturesEnabled = true
+                scrollGesturesEnabled = true,
             ),
 
         ) {

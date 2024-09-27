@@ -2,10 +2,11 @@ package com.example.globalfugitive
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
@@ -13,23 +14,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
 @Composable
-fun EndGame(navController: NavController, viewModel: GameViewModel) {
-    val mysteryCountry = viewModel.mysteryCountry.value
-    val gameWon = viewModel.gameWon.value
-    val targets by viewModel.targets
+fun EndGame(
+    navController: NavController,
+    gameViewModel: GameViewModel,
+    userViewModel: UserViewModel
+) {
+    val mysteryCountry = gameViewModel.mysteryCountry.value
+    val gameWon = gameViewModel.gameWon.value
+    val targets by gameViewModel.targets
 
     println("gameWon value @ EndGame: $gameWon")
 
@@ -39,55 +41,84 @@ fun EndGame(navController: NavController, viewModel: GameViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        //TODO: Center text for end game message
 
-        // Show guessed targets
-        Text(
-            text = "Targets",
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            textDecoration = TextDecoration.Underline,
-        )
+        // Set images and text based on game outcome
+        var winLoseFace: Int? = null
+        var winLoseImg: Int? = null
+        var winLoseTxt: String? = null
+        when (gameWon) {
+            true -> {
+                winLoseFace = R.drawable.authority_face_1_transp
+                winLoseImg = R.drawable.fugitive_found
+                winLoseTxt = "You found the fugitive! They were hiding in $mysteryCountry!"
+            }
+            else -> {
+                winLoseFace = R.drawable.authority_face_4_transp
+                winLoseImg = R.drawable.fugitive_escaped
+                winLoseTxt = "The fugitive got away!..They were hiding in $mysteryCountry!"
+            }
+        }
 
-        targets.forEachIndexed{ index, target ->
-            Text(
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-//                fontSize = 14.sp,
-                text = "${index + 1}. $target",
-            )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+
+        ) {
+
+            //Face image
+            Column(
+            ) {
+                Image(
+                    painter = painterResource(id = winLoseFace),
+                    contentDescription = "Authority face",
+                    modifier = Modifier
+                        .height(175.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            //Guesses Text
+            Column(
+            ) {
+                Text(
+                    text = "Targets",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    textDecoration = TextDecoration.Underline,
+                )
+
+                targets.forEachIndexed { index, target ->
+                    Text(
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        text = "${index + 1}. $target",
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        if (gameWon == true) {
-            Image(
-                painter = painterResource(id = R.drawable.fugitive_found),
-                contentDescription = "Fugitive found image",
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-            )
+        Image(
+            painter = painterResource(id = winLoseImg),
+            contentDescription = "Fugitive found image",
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+        )
 
-            Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
+        //TODO: Center text for end game message
+        Column (
+          modifier = Modifier.width(250.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
-                text = "You found the fugitive!\nThey were hiding in $mysteryCountry",
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-            )
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.fugitive_escaped),
-                contentDescription = "Fugitive escaped image",
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = "The fugitive got away!..\nThey were hiding in $mysteryCountry",
+                text = winLoseTxt,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)

@@ -2,14 +2,12 @@ package com.example.globalfugitive
 
 import GoogleMapsScreen
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -50,18 +47,20 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GamePlayScreen(
     navController: NavController,
-    viewModel: GameViewModel
+    gameViewModel: GameViewModel,
+    userViewModel: UserViewModel
 ) {
 
     //start a new game
     LaunchedEffect(Unit) {
-        viewModel.startNewGame()
+        gameViewModel.startNewGame()
     }
 
     val context = LocalContext.current
@@ -71,15 +70,15 @@ fun GamePlayScreen(
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) } // Shared selected location
     val coroutineScope = rememberCoroutineScope()
     var lazyColumnVisible by remember { mutableStateOf(true) }
-    val targets by viewModel.targets
-    val mysteryCountry by viewModel.mysteryCountry
+    val targets by gameViewModel.targets
+    val mysteryCountry by gameViewModel.mysteryCountry
 
     // Debugging
     println("mysteryCountry = $mysteryCountry")
 
     // Define a CameraPositionState to control the map camera
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(1.3521, 103.8198), 0f) // Initial position
+        position = CameraPosition.fromLatLngZoom(LatLng(1.3521, 103.8198), 1f) // Initial position
     }
 
     // Update predictions whenever the search query changes
@@ -101,7 +100,7 @@ fun GamePlayScreen(
         GoogleMapsScreen(
             cameraPositionState = cameraPositionState,
             selectedLocation = selectedLocation,
-            viewModel = viewModel,
+            viewModel = gameViewModel,
         )
     }
 
@@ -206,6 +205,17 @@ fun GamePlayScreen(
                             .offset(x = 30.dp)
 
                     )
+                } else {
+                    Column(modifier = Modifier.width(150.dp)) {
+                        Text(
+                            text = "\"The fugitive is on the run... Go find them, time is running out!\"",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White,
+                            modifier = Modifier
+                                .offset(x = 30.dp)
+                        )
+                    }
+
                 }
 
                 targets.forEachIndexed { index, target ->
@@ -221,17 +231,6 @@ fun GamePlayScreen(
                     )
                 }
             }
-
-            //Nested guesses text column
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(bottom = 100.dp),
-//                horizontalAlignment = Alignment.CenterHorizontally,
-//                verticalArrangement = Arrangement.Bottom
-//            ) {
-//
-//            }
         } // Close face response and text row
 
         //Guess entry row
@@ -276,16 +275,16 @@ fun GamePlayScreen(
                             if (predictions.isNotEmpty()) {
                                 val firstPrediction = predictions[0]
                                 val latLng = getLatLngFromPrediction(context, firstPrediction)
-                                if (latLng != null) {
+                                if (latLng != null && gameViewModel.validGuess(searchQuery)) {
                                     println("Updating selected location to: $latLng")
                                     selectedLocation = latLng // Update the selected location
 
                                     // Add guess to list of prior guesses if valid
-                                    viewModel.addGuess(searchQuery, latLng)
+                                    gameViewModel.addGuess(searchQuery, latLng)
 
                                     // Check if game over conditions met
-                                    if (viewModel.gameEnd(searchQuery)) {
-                                        println("gameWon value @ GamePlayScreen: ${viewModel.gameWon.value}")
+                                    if (gameViewModel.gameEnd(searchQuery)) {
+                                        println("gameWon value @ GamePlayScreen: ${gameViewModel.gameWon.value}")
                                         navController.navigate("EndGame")
                                     }
 
@@ -348,7 +347,7 @@ fun GamePlayScreen(
                                         println("Selected LatLng: $latLng")
                                         if (latLng != null) {
                                             //Update camera position
-                                            //                                            selectedLocation = latLng
+                                            //selectedLocation = latLng
                                             searchQuery = prediction
                                                 .getPrimaryText(null)
                                                 .toString()

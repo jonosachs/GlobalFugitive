@@ -1,29 +1,39 @@
 package com.example.globalfugitive
 
-import android.app.Application
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun AppNavigation(viewModel: GameViewModel) {
-    val navController = rememberNavController()
-    val rememberedViewModel = remember { viewModel }
+fun AppNavigation(
+    gameViewModel: GameViewModel,
+    userViewModel: UserViewModel,
+    startDestination: String,
+    navController: NavHostController
+) {
 
     NavHost(
         navController = navController,
-        startDestination = "Landing"
+        startDestination = startDestination
     ) {
         composable("Landing") { Landing(navController) }
-        composable("SignIn") { SignIn(navController) }
-        composable("MainMenu") { MainMenu(navController) }
-        composable("GamePlayScreen") { GamePlayScreen(navController, rememberedViewModel) }
-        composable("EndGame") { EndGame(navController, rememberedViewModel) }
+        composable("SignInScreen") { SignInScreen(userViewModel, navController) }
+        composable("DrawerMenu") {
+            // Create a nested NavController for DrawerMenu's internal navigation
+            val nestedNavController = rememberNavController()
+            DrawerNavigation(
+                parentNavController = navController, // Pass parent NavController
+                nestedNavController = nestedNavController, // Nested NavController for the drawer menu
+                userViewModel = userViewModel
+            )
+        }
+        composable("GamePlayScreen") { GamePlayScreen(navController, gameViewModel, userViewModel) }
+        composable("EndGame") { EndGame(navController, gameViewModel, userViewModel) }
     }
 
 
 }
+
+

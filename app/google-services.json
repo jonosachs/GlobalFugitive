@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1017479713336",
+    "project_id": "global-fugitive-9fc78",
+    "storage_bucket": "global-fugitive-9fc78.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1017479713336:android:120981d50a4ed1bbda8ccd",
+        "android_client_info": {
+          "package_name": "com.example.globalfugitive"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0oPfPylxpoVJaVXdXO3MgWblBxttbqJE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

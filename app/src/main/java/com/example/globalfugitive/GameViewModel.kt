@@ -20,6 +20,8 @@ import kotlin.math.sqrt
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val appContext = getApplication<Application>()
+
     var targets = mutableStateOf<List<String>>(emptyList())
         private set
     var countries = mutableStateOf<List<String>>(emptyList())
@@ -109,7 +111,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun extractJson(): JsonArray {
-        val inputStream = getApplication<Application>().resources.openRawResource(R.raw.countries)
+        val inputStream = appContext.resources.openRawResource(R.raw.countries)
         val reader = InputStreamReader(inputStream)
         val jsonArray = JsonParser.parseReader(reader).asJsonArray
         reader.close()
