@@ -74,7 +74,7 @@ class GameViewModel(
         val long1 = guessLatLng.longitude
         val lat2 = mysteryLat.value!!
         val long2 = mysteryLong.value!!
-        haversineDistance(lat1, long1, lat2, long2)
+        guessDistance.value = haversineDistance(lat1, long1, lat2, long2)
 
         val formatter = NumberFormat.getNumberInstance(Locale.UK)
         val distanceString = formatter.format(guessDistance.value)
@@ -91,7 +91,7 @@ class GameViewModel(
         }
     }
 
-    fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double) {
+    fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Int {
         // Radius of the Earth in kilometers
         val earthRadius = 6371.0
 
@@ -108,10 +108,7 @@ class GameViewModel(
         // Distance in kilometers
         val distance = (earthRadius * c).roundToInt()
 
-        guessDistance.value = distance
-
-//        val formatter = NumberFormat.getNumberInstance(Locale.UK)
-//        return formatter.format(distance)
+        return distance
     }
 
     suspend fun startNewGame() {
@@ -167,6 +164,12 @@ class GameViewModel(
             }
         }
     }
+
+    fun returnCountries(): LiveData<List<String>> {
+        return countries
+    }
+
+
 
 
 }

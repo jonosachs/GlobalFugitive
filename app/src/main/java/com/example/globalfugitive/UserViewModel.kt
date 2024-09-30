@@ -2,13 +2,9 @@ package com.example.globalfugitive
 
 import android.app.Activity
 import android.content.ContentValues.TAG
-import android.credentials.CredentialManager
-import android.credentials.GetCredentialRequest
 import android.net.Uri
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.result.ActivityResultRegistry
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,23 +16,13 @@ import androidx.credentials.CustomCredential
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.ActivityNavigator
-import androidx.navigation.NavController
-import androidx.navigation.NavHost
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-import com.google.api.Context
-import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthEmailException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthCredential
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.auth.userProfileChangeRequest
@@ -53,8 +39,6 @@ class UserViewModel() : ViewModel() {
     val errorMessage = MutableLiveData<String?>(null)
     var currentUser by mutableStateOf<User?>(null)
         private set
-
-
 
     fun signInWithEmailAndPassword(
         activity: Activity,
@@ -90,7 +74,9 @@ class UserViewModel() : ViewModel() {
                 userId = user.uid,
                 email = user.email,
                 displayName = user.displayName,
-                photoUrl = user.photoUrl?.toString()
+                photoUrl = user.photoUrl?.toString(),
+                dateOfBirth = null,
+                sex = null
             )
         } else {
             null

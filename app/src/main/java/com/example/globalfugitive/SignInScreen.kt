@@ -139,12 +139,7 @@ fun SignInScreen(
         Button(
             onClick = {
                 isLoading = true
-                val activity = context as Activity
-                userViewModel.createUserWithEmailAndPassword(
-                    activity,
-                    email,
-                    password,
-                ) { navController.navigate("DrawerMenu") }
+                navController.navigate("SignUpScreen")
             },
             modifier = Modifier.width(200.dp),
 //            enabled = !isLoading
@@ -152,7 +147,7 @@ fun SignInScreen(
             Text("Sign Up")
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         GoogleSignInButton { credential ->
             userViewModel.signInWithGoogle(credential) { navController.navigate("DrawerMenu") }
