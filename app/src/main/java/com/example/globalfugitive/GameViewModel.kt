@@ -3,12 +3,7 @@ package com.example.globalfugitive
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
-import java.io.InputStreamReader
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.atan2
@@ -17,22 +12,36 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class GameViewModel(application: Application) : AndroidViewModel(application) {
+class GameViewModel(
+    private val countryDao: CountryDao,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val appContext = getApplication<Application>()
 
-    var targets = mutableStateOf<List<String>>(emptyList())
+    private val _countries = MutableLiveData<List<String>>()
+    val countries: LiveData<List<String>> = _countries
+
+    var guesses = mutableStateOf<List<String>>(emptyList())
         private set
-    var countries = mutableStateOf<List<String>>(emptyList())
+//    var countries = mutableStateOf<List<String>>(emptyList())
     var mysteryCountry = mutableStateOf<String?>(null)
         private set
     var mysteryLat = mutableStateOf<Double?>(null)
         private set
     var mysteryLong = mutableStateOf<Double?>(null)
+    var guessDistance = mutableStateOf<Int?>(null)
     var guessesLatLng = mutableStateOf<List<LatLng>>(emptyList())
     var gameWon = mutableStateOf<Boolean?>(null)
         private set
+
+
 
     fun gameEnd(guess: String): Boolean {
         return when {
@@ -41,7 +50,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 println("gameWon value @ GameViewModel: $gameWon")
                 true
             }
-            targets.value.size >= 5 -> {
+            guesses.value.size >= 5 -> {
                 gameWon.value = false
                 println("gameWon value @ GameViewModel: $gameWon")
                 true
@@ -55,9 +64,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun validGuess(guess: String): Boolean {
-        return countries.value.contains(guess.lowercase()) &&
-                !targets.value.toString().lowercase().contains(guess.lowercase()) &&
-                targets.value.size < 5
+        return countries.value?.contains(guess.lowercase()) == true &&
+                !guesses.value.toString().lowercase().contains(guess.lowercase()) &&
+                guesses.value.size < 5
     }
 
     fun addGuess (guess: String, guessLatLng: LatLng) {
@@ -65,21 +74,24 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val long1 = guessLatLng.longitude
         val lat2 = mysteryLat.value!!
         val long2 = mysteryLong.value!!
-        val distance = haversineDistance(lat1, long1, lat2, long2)
+        haversineDistance(lat1, long1, lat2, long2)
+
+        val formatter = NumberFormat.getNumberInstance(Locale.UK)
+        val distanceString = formatter.format(guessDistance.value)
 
         if(validGuess(guess)) {
             if (correctGuess(guess)) {
-                targets.value += "$guess 0km  ✅"
+                guesses.value += "$guess ✅"
             }
             else {
-                targets.value += "$guess ${distance}km  ❌"
+                guesses.value += "$guess ${distanceString}km  ❌"
                 guessesLatLng.value += guessLatLng
             }
 
         }
     }
 
-    fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double) : String {
+    fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double) {
         // Radius of the Earth in kilometers
         val earthRadius = 6371.0
 
@@ -95,47 +107,64 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         // Distance in kilometers
         val distance = (earthRadius * c).roundToInt()
-        val formatter = NumberFormat.getNumberInstance(Locale.UK)
-        return formatter.format(distance)
+
+        guessDistance.value = distance
+
+//        val formatter = NumberFormat.getNumberInstance(Locale.UK)
+//        return formatter.format(distance)
     }
 
-    fun startNewGame() {
-        val countryObject = getRandomCountry()
-        mysteryLat.value = countryObject["latitude"].asDouble
-        mysteryLong.value = countryObject["longitude"].asDouble
-        mysteryCountry.value = countryObject["name"].asString
-        targets.value = emptyList()
+    suspend fun startNewGame() {
+
+        val randomCountry = getRandomCountry()
+        mysteryLat.value = randomCountry?.latitude
+        mysteryLong.value = randomCountry?.longitude
+        mysteryCountry.value = randomCountry?.name
+        guesses.value = emptyList()
         gameWon.value = null
         guessesLatLng.value = emptyList()
         getCountries()
+
     }
 
-    fun extractJson(): JsonArray {
-        val inputStream = appContext.resources.openRawResource(R.raw.countries)
-        val reader = InputStreamReader(inputStream)
-        val jsonArray = JsonParser.parseReader(reader).asJsonArray
-        reader.close()
-        return jsonArray
+//    fun extractJson(): JsonArray {
+//        val inputStream = appContext.resources.openRawResource(R.raw.countries)
+//        val reader = InputStreamReader(inputStream)
+//        val jsonArray = JsonParser.parseReader(reader).asJsonArray
+//        reader.close()
+//        return jsonArray
+//    }
+
+    private suspend fun getRandomCountry(): Country? {
+        val countryCount = countryDao.getCountryCount()
+
+        if (countryCount == 0) return null
+
+        val randomIndex = (0 until ( countryCount) ).random()
+        return countryDao.getCountryById(randomIndex)
     }
 
-    private fun getRandomCountry(): JsonObject {
-        val jsonArray = extractJson()
-        val randomIndex = (0 until jsonArray.size()).random()
-        return jsonArray[randomIndex].asJsonObject
-    }
-
+    // Function to fetch countries from the Room database
     fun getCountries() {
-        val jsonArray = extractJson()
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Fetch all countries from the database
+                val listOfCountries = countryDao.getAllCountries()
+                val countryNames = mutableListOf<String>()
 
-        for (element in jsonArray) {
-            val jsonObject = element.asJsonObject
-            val name = jsonObject["name"].asString
-            val shortName1 = jsonObject["iso2"].asString
-            val shortName2 = jsonObject["iso3"].asString
-            countries.value += name.lowercase()
-            countries.value += shortName1.lowercase()
-            countries.value += shortName2.lowercase()
+                // Iterate through the countries and extract names
+                for (country in listOfCountries) {
+                    countryNames.add(country.name.lowercase())
+                    country.iso2?.let { countryNames.add(it.lowercase()) }
+                    country.iso3?.let { countryNames.add(it.lowercase()) }
+                }
 
+                // Post the extracted country names to LiveData
+                _countries.postValue(countryNames)
+            } catch (e: Exception) {
+                // Handle the exception appropriately
+                e.printStackTrace()
+            }
         }
     }
 

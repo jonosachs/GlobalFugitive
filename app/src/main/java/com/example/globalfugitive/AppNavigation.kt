@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun AppNavigation(
+    countryViewModel: CountryViewModel,
     gameViewModel: GameViewModel,
     userViewModel: UserViewModel,
     startDestination: String,

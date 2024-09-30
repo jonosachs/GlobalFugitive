@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.globalfugitive">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
+
+
 
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -29,11 +34,18 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="${MAPS_API_KEY}" />
+            android:value="${MAPS_API_KEY}"
+        />
 
+        <meta-data
+            android:name="com.google.android.gms.auth.api.credentials.WebClientId"
+            android:value="1017479713336-eiuta7cugkhsnlqblnjh2sskqbn19551.apps.googleusercontent.com"
+        />
 
 
     </application>
+
+
 
 </manifest>
 

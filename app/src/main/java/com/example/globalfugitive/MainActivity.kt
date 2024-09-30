@@ -1,14 +1,21 @@
 package com.example.globalfugitive
 
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
 import com.example.globalfugitive.ui.theme.AppTheme
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.libraries.places.api.Places
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 
 import com.google.firebase.auth.ktx.auth
@@ -20,18 +27,27 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var auth: FirebaseAuth
 
+    private val countryViewModel: CountryViewModel by viewModels()
+
+    private lateinit var gameViewModel: GameViewModel
+
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Initialize Firebase Auth
         auth = Firebase.auth
+        FirebaseApp.initializeApp(this)
 
         // Initialise places API
         initializePlacesAPI()
 
+        // Initialise GameViewModel using GameViewModelFactory
+        initialiseGameViewModel()
+
         // Create ViewModels and Repositories in the Activity scope
         val userViewModel = UserViewModel()
-        val gameViewModel = GameViewModel(application)
+//        val gameViewModel = GameViewModel(countryDao, application)
 
         enableEdgeToEdge()
 
@@ -50,6 +66,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 AppNavigation(
+                    countryViewModel = countryViewModel,
                     gameViewModel = gameViewModel,
                     userViewModel = userViewModel,
                     startDestination = startDestination,
@@ -67,6 +84,30 @@ class MainActivity : ComponentActivity() {
         if (!Places.isInitialized() && apiKey != null) {
             Places.initialize(applicationContext, apiKey)
         }
+    }
+
+    private fun initialiseGameViewModel() {
+        // Access the CountryDao from the Room database
+        val dao = CountryDatabase.getDatabase(application).countryDao()
+
+        // Create an instance of GameViewModelFactory and pass the necessary dependencies
+        val factory = GameViewModelFactory(dao, application)
+
+        // Initialize GameViewModel using the factory
+        gameViewModel = ViewModelProvider(this, factory).get(GameViewModel::class.java)
+
+        // Fetch countries
+        gameViewModel.getCountries()
+
+//        // Observe the list of country names and update UI when data changes
+//        gameViewModel.countries.observe(this) { countryNames ->
+//            // Update the UI with the list of country names
+//            countryNames?.let {
+//                for (name in it) {
+//                    println("Country: $name")
+//                }
+//            }
+//        }
     }
 
 

@@ -31,7 +31,7 @@ fun EndGame(
 ) {
     val mysteryCountry = gameViewModel.mysteryCountry.value
     val gameWon = gameViewModel.gameWon.value
-    val targets by gameViewModel.targets
+    val targets by gameViewModel.guesses
 
     println("gameWon value @ EndGame: $gameWon")
 
@@ -128,7 +128,7 @@ fun EndGame(
         Spacer(modifier = Modifier.height(10.dp))
 
         Button(
-            onClick = { navController.navigate("MainMenu") },
+            onClick = { navController.navigate("DrawerMenu") },
             modifier = Modifier.width(200.dp),
         ) {
             Text("Play again")

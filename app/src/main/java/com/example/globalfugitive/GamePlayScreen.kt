@@ -47,7 +47,6 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,8 +69,9 @@ fun GamePlayScreen(
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) } // Shared selected location
     val coroutineScope = rememberCoroutineScope()
     var lazyColumnVisible by remember { mutableStateOf(true) }
-    val targets by gameViewModel.targets
+    val targets by gameViewModel.guesses
     val mysteryCountry by gameViewModel.mysteryCountry
+    val guessDistance by gameViewModel.guessDistance
 
     // Debugging
     println("mysteryCountry = $mysteryCountry")
@@ -167,13 +167,13 @@ fun GamePlayScreen(
 
             //TODO: Face response based on distance from mystery country
             var imgId: Int? = null
-            when (targets.size) {
-                2 -> imgId = R.drawable.authority_face_2_transp
-                3 -> imgId = R.drawable.authority_face_3_transp
-                4 -> imgId = R.drawable.authority_face_4_transp
-                5 -> imgId = R.drawable.authority_face_4_transp
+            imgId = when {
+                guessDistance != null && guessDistance!! > 12000 -> R.drawable.authority_face_4_transp
+                guessDistance != null && guessDistance!! > 10000 -> R.drawable.authority_face_4_transp
+                guessDistance != null && guessDistance!! > 5000 -> R.drawable.authority_face_3_transp
+                guessDistance != null && guessDistance!! > 2500 -> R.drawable.authority_face_2_transp
                 else -> {
-                    imgId = R.drawable.authority_face_1_transp
+                    R.drawable.authority_face_1_transp
                 }
             }
 
