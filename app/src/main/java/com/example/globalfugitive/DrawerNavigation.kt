@@ -1,5 +1,7 @@
 package com.example.globalfugitive
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun DrawerNavigation(
     parentNavController: NavController,
@@ -45,7 +48,7 @@ fun DrawerNavigation(
                         drawerState.close()
                     }
                     when(route) {
-                        "SignInScreen" -> {
+                        "SignInScreen", "Landing" -> {
                             userViewModel.signOut()
                             parentNavController.navigate(route)
                         }
@@ -62,7 +65,7 @@ fun DrawerNavigation(
             startDestination = "MainMenu" // Default start screen inside drawer menu
         ) {
             composable("MainMenu") { MainMenu(parentNavController, userViewModel, modifier = Modifier) }
-            composable("UserProfile") { UserProfile(userViewModel) }
+            composable("UserProfile") { UserProfile(userViewModel, parentNavController) }
             composable("SignInScreen") { SignInScreen(userViewModel, parentNavController) }
         }
 

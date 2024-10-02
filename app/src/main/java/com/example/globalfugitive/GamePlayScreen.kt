@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -72,6 +73,7 @@ fun GamePlayScreen(
     val targets by gameViewModel.guesses
     val mysteryCountry by gameViewModel.mysteryCountry
     val guessDistance by gameViewModel.guessDistance
+    var isLoading by remember { mutableStateOf(true) }
 
     // Debugging
     println("mysteryCountry = $mysteryCountry")
@@ -93,15 +95,25 @@ fun GamePlayScreen(
     //Maps box
     Box(
         modifier = Modifier
-        .fillMaxSize()
+        .fillMaxSize(),
+        contentAlignment = Alignment.Center
     ){
+
         //Google maps row
         //TODO: Fit google maps screen to canvas to show entire world
         GoogleMapsScreen(
             cameraPositionState = cameraPositionState,
             selectedLocation = selectedLocation,
             viewModel = gameViewModel,
+            onMapLoaded = {
+                isLoading = false
+            }
         )
+
+        // Show loading indicator while the map is loading
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+        }
     }
 
     //Footer box

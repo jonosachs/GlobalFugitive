@@ -7,7 +7,7 @@
 
     <application
 
-
+        android:enableOnBackInvokedCallback="true"
 
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -17,7 +17,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.GlobalFugitive"
-        tools:targetApi="31">
+        tools:targetApi="tiramisu">
         <activity
 
             android:name=".MainActivity"
@@ -37,10 +37,10 @@
             android:value="${MAPS_API_KEY}"
         />
 
-        <meta-data
-            android:name="com.google.android.gms.auth.api.credentials.WebClientId"
-            android:value="1017479713336-eiuta7cugkhsnlqblnjh2sskqbn19551.apps.googleusercontent.com"
-        />
+<!--        <meta-data-->
+<!--            android:name="com.google.android.gms.auth.api.credentials.WebClientId"-->
+<!--            android:value="@string/web_client_id"-->
+<!--        />-->
 
 
     </application>

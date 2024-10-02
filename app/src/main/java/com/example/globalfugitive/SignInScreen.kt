@@ -4,11 +4,8 @@ package com.example.globalfugitive
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Build
-import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
-import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,23 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat.startActivityForResult
-import androidx.credentials.Credential
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialException
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.globalfugitive.BuildConfig.WEB_CLIENT_ID
-import com.example.globalfugitive.ui.theme.backgroundDark
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
-import kotlinx.coroutines.launch
 
 
 @SuppressLint("ResourceType")
@@ -139,6 +122,7 @@ fun SignInScreen(
         Button(
             onClick = {
                 isLoading = true
+                userViewModel.clearErrorMessage()
                 navController.navigate("SignUpScreen")
             },
             modifier = Modifier.width(200.dp),
@@ -149,7 +133,7 @@ fun SignInScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        GoogleSignInButton { credential ->
+        GoogleSignInButton(userViewModel) { credential ->
             userViewModel.signInWithGoogle(credential) { navController.navigate("DrawerMenu") }
         }
 

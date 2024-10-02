@@ -3,7 +3,6 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -24,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.text.style.TextDecoration
+import com.example.globalfugitive.DatePickerField
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -49,10 +49,10 @@ fun SignUpScreen(
     // Observe error messages from UserViewModel
     val errorMessage by userViewModel.errorMessage.observeAsState()
 
-    //Drop down menu
+    //Drop down menu for gender
     val gender = listOf("Male", "Female", "Other")
     var isExpanded by remember { mutableStateOf(false) }
-    var selectedSex by remember { mutableStateOf(gender[0]) }
+    var selectedGender by remember { mutableStateOf(gender[0]) }
 
     //Date picker
     val calendar = Calendar.getInstance()
@@ -60,11 +60,7 @@ fun SignUpScreen(
     var selectedDate by remember { mutableStateOf(calendar.timeInMillis) }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate)
     var showDatePicker by remember { mutableStateOf(false) }
-    var enabled by remember { mutableStateOf(true) }
 
-
-    // Create an InteractionSource to prevent focus
-    var interactionSource = remember { MutableInteractionSource() }
 
         // Observe the errorMessage and stop loading if there's an error
     if (errorMessage != null) {
@@ -121,7 +117,7 @@ fun SignUpScreen(
                 userViewModel.clearErrorMessage()
                 email = it
             },
-            label = { Text("Username") },
+            label = { Text("Email") },
             singleLine = true,
         )
 
@@ -129,7 +125,10 @@ fun SignUpScreen(
 
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                userViewModel.clearErrorMessage()
+                password = it
+            },
             label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
             singleLine = true,
@@ -161,7 +160,6 @@ fun SignUpScreen(
                 },
         )
 
-
         if (showDatePicker) {
             DatePickerDialog(
                 onDismissRequest = {
@@ -170,6 +168,7 @@ fun SignUpScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
+                            userViewModel.clearErrorMessage()
                             showDatePicker = false
                             selectedDate = datePickerState.selectedDateMillis ?: calendar.timeInMillis
                         }
@@ -204,10 +203,12 @@ fun SignUpScreen(
                         canFocus = false
                     },
                 readOnly = true,
-                value = selectedSex,
+                value = selectedGender,
                 onValueChange = {},
                 label = { Text("Gender") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = isExpanded)
+               },
             )
             ExposedDropdownMenu(
                 expanded = isExpanded,
@@ -217,7 +218,8 @@ fun SignUpScreen(
                     DropdownMenuItem(
                         text = { Text(selectionOption) },
                         onClick = {
-                            selectedSex = selectionOption
+                            userViewModel.clearErrorMessage()
+                            selectedGender = selectionOption
                             isExpanded = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -236,6 +238,8 @@ fun SignUpScreen(
                     activity,
                     email,
                     password,
+                    selectedDate,
+                    selectedGender
                 ) { navController.navigate("DrawerMenu") }
             },
             modifier = Modifier.width(200.dp),
@@ -248,7 +252,8 @@ fun SignUpScreen(
 
         Button(
             onClick = {
-               navController.navigate("SignInScreen")
+                userViewModel.clearErrorMessage()
+                navController.navigate("SignInScreen")
             },
             modifier = Modifier.width(200.dp),
         ) {

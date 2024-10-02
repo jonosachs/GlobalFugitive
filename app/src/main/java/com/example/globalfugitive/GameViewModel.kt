@@ -120,6 +120,7 @@ class GameViewModel(
         guesses.value = emptyList()
         gameWon.value = null
         guessesLatLng.value = emptyList()
+        guessDistance.value = null
         getCountries()
 
     }

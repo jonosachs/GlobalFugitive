@@ -1,13 +1,13 @@
 package com.example.globalfugitive
 
-import java.util.Date
+import com.google.firebase.Timestamp
 
 data class User(
     val userId: String,
     val email: String?,
-    val displayName: String?,
+    var displayName: String?,
     val photoUrl: String?,
-    val dateOfBirth: Date?,
-    val sex: String?
+    val dateOfBirth: Long?,
+    val gender: String?
 )
 

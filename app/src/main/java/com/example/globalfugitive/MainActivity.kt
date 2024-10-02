@@ -3,7 +3,6 @@ package com.example.globalfugitive
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,6 +18,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 
@@ -45,6 +45,8 @@ class MainActivity : ComponentActivity() {
         // Initialise GameViewModel using GameViewModelFactory
         initialiseGameViewModel()
 
+        val db = Firebase.firestore
+
         // Create ViewModels and Repositories in the Activity scope
         val userViewModel = UserViewModel()
 //        val gameViewModel = GameViewModel(countryDao, application)
@@ -62,6 +64,7 @@ class MainActivity : ComponentActivity() {
                 var startDestination = "Landing"
                 if (currentUser != null) {
                     println("User @ MainActivity: $currentUser")
+                    userViewModel.setCurrentUserFromFireStore()
                     startDestination = "DrawerMenu" // Navigate directly to DrawerMenu if user is signed in
                 }
 
@@ -99,15 +102,6 @@ class MainActivity : ComponentActivity() {
         // Fetch countries
         gameViewModel.getCountries()
 
-//        // Observe the list of country names and update UI when data changes
-//        gameViewModel.countries.observe(this) { countryNames ->
-//            // Update the UI with the list of country names
-//            countryNames?.let {
-//                for (name in it) {
-//                    println("Country: $name")
-//                }
-//            }
-//        }
     }
 
 

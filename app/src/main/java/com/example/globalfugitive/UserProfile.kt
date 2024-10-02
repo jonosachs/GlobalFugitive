@@ -1,29 +1,42 @@
 package com.example.globalfugitive
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
-import android.provider.MediaStore
-import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,29 +44,59 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.google.firebase.auth.UserProfileChangeRequest
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.ktx.storage
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun UserProfile(
     userViewModel: UserViewModel,
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val user = userViewModel.currentUser
 
+    var isEditing by remember { mutableStateOf(false) }
+    var fieldToEdit by remember { mutableStateOf("") }
+    var currentField by remember { mutableStateOf("") }
+
+    var showConfirmDelete by remember { mutableStateOf(false) }
+    var showConfirmResetEmail by remember { mutableStateOf(false) }
+
+    //Date picker
+    val calendar = Calendar.getInstance()
+    // Create a DatePicker state and initialize it with the selected date
+    var selectedDate by remember { mutableStateOf(calendar.timeInMillis) }
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate)
+    var dateOfBirth by remember { mutableStateOf(user?.dateOfBirth) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    // Fields with an "editable" flag
+    val fields = listOf(
+        Triple("UserId", user?.userId.orEmpty(), false),  // Non-editable
+        Triple("Display Name", user?.displayName.orEmpty(), true),  // Editable
+        Triple("Email", user?.email.orEmpty(), false),  // Non-editable
+        Triple("Date of Birth", dateOfBirth?.let { Date(it) }?.let { formatDate(it) }, true),  // Editable as date picker
+        Triple("Gender", user?.gender.orEmpty(), true),  // Editable
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Top
     ) {
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Display user profile picture
         user?.photoUrl?.let {
             Image(
@@ -63,10 +106,9 @@ fun UserProfile(
                     .size(100.dp)
                     .clip(CircleShape)
                     .border(2.dp, Color.Gray, CircleShape)
-                    .clickable { /* Handle profile picture click here, like opening an image picker */ }
+                    .clickable { /* Handle profile picture click here */ }
             )
         } ?: run {
-            // Default placeholder if no profile picture exists
             Image(
                 painter = painterResource(id = R.drawable.account_circle),
                 contentDescription = "Default Profile Picture",
@@ -74,90 +116,248 @@ fun UserProfile(
                     .size(100.dp)
                     .clip(CircleShape)
                     .border(2.dp, Color.Gray, CircleShape)
-                    .clickable { /* Handle profile picture click here */ }
+                    .clickable { /* Handle profile picture click */ }
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Display user name
-        Text(
-            text = "Name: ${user?.displayName ?: "N/A"}",
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Text(text = "User Profile", style = MaterialTheme.typography.headlineLarge)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            items(fields.size) { index ->
+                val (label, value, isEditable) = fields[index]
+                // Show normal UserDataField for other fields
+                UserDataField(
+                    field = label,
+                    value = value.orEmpty(),  // Pass the current field value
+                    isEditable = isEditable,
+                    onEdit = {
+                        if (isEditable) {
+                            fieldToEdit = label
+                            currentField = value.orEmpty()
+                            isEditing = true
+                        }
+                    },
+                    onIsDate = { showDatePicker = true },
+                    onIsGender = { },
+                )
+            }
+        }
 
-        // Display user email
-        Text(
-            text = "Email: ${user?.email ?: "N/A"}",
-            style = MaterialTheme.typography.bodyLarge
-        )
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDismissRequest = {
+                    showDatePicker = false
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            userViewModel.clearErrorMessage()
+                            showDatePicker = false
+                            selectedDate = datePickerState.selectedDateMillis ?: calendar.timeInMillis
+                        }
+                    ) {
+                        Text(text = "OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {showDatePicker = false}
+                    ) {
+                        Text(text = "Cancel")
+                    }
+                }
+            ) {
+                DatePicker( state = datePickerState )
+            }
+        }// end of if
+
+
+        if (isEditing) {
+            EditUserDataField(
+                initialFieldValue = currentField,
+                onDismiss = { isEditing = false },
+                onSave = { updatedField ->
+                    val fieldName = when (fieldToEdit) {
+                        "Display Name" -> "displayName"
+                        "Gender" -> "gender"
+                        else -> null
+                    }
+
+                    fieldName?.let { field ->
+                        user?.userId?.let { userId ->
+                            userViewModel.updateUserField(
+                                userId = userId,
+                                field = field,
+                                value = updatedField,
+                                onSuccess = { /* Handle success */ },
+                                onFailure = { /* Handle failure */ }
+                            )
+                        }
+                    }
+                    isEditing = false
+                }
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Password Reset Button
-        Button(onClick = {
-            user?.email?.let { email ->
-                userViewModel.sendPasswordResetEmail(email, context)
-            }
-        }) {
+        Button(onClick = { showConfirmResetEmail = true }) {
             Text("Reset Password")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        if (showConfirmResetEmail) {
+            ConfirmDialogue(
+                text = "Reset email? A message will be sent to your registered email address.",
+                onConfirm = {
+                    user?.email?.let { email ->
+                        userViewModel.sendPasswordResetEmail(email)
+                    }
+                    showConfirmResetEmail = false
+                },
+                onDismiss = { showConfirmResetEmail = false }
+            )
+        }
 
-        // Upload Photo Button
-        Button(onClick = {
-            // Implement image picker and photo upload functionality here
-            pickAndUploadImage(context, userViewModel)
-        }) {
-            Text("Upload New Photo")
+        // Delete account
+        Button(onClick = { showConfirmDelete = true }) {
+            Text("Delete Account")
+        }
+
+        if (showConfirmDelete) {
+            ConfirmDialogue(
+                text = "Warning: Are you sure you want to delete your account?",
+                onConfirm = {
+                    userViewModel.deleteUser {
+                        navController.navigate("SignInScreen") {
+                            popUpTo("SignInScreen") { inclusive = true }
+                        }
+                    }
+                    showConfirmDelete = false
+                },
+                onDismiss = { showConfirmDelete = false }
+            )
         }
     }
 }
 
-// Function to trigger password reset email
-fun UserViewModel.sendPasswordResetEmail(email: String, context: Context) {
-    Firebase.auth.sendPasswordResetEmail(email)
-        .addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Toast.makeText(context, "Password reset email sent to $email", Toast.LENGTH_LONG).show()
+
+fun formatDate(date: Date): String {
+    val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    return formatter.format(date)
+}
+
+
+@Composable
+fun UserDataField(
+    field: String,
+    value: String,
+    isEditable: Boolean,
+    onEdit: () -> Unit,
+    onIsDate: () -> Unit,
+    onIsGender: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .background(
+                Color.LightGray,
+                shape = MaterialTheme.shapes.medium
+            )
+            .padding(16.dp)
+            .clip(MaterialTheme.shapes.medium),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = "$field: $value", modifier = Modifier.weight(1f))
+
+        if (isEditable) {
+            if (field == "Date of Birth") {
+                IconButton(onClick = onIsDate) {
+                    Icon(Icons.Filled.Edit, contentDescription = "Edit")
+                }
+            } else if (field == "Gender") {
+                IconButton(onClick = onIsGender) {
+                    Icon(Icons.Filled.Edit, contentDescription = "Edit")
+                }
             } else {
-                Toast.makeText(context, "Failed to send reset email", Toast.LENGTH_LONG).show()
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                }
             }
         }
+
+
+
+    }
 }
 
-// Function to pick and upload image
-fun pickAndUploadImage(context: Context, userViewModel: UserViewModel) {
-    val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-    (context as? Activity)?.startActivityForResult(intent, 100)
 
-    // Handle the result in the activity's onActivityResult:
-    // userViewModel.uploadImage(uri) with the selected image URI
-}
+@Composable
+fun EditUserDataField(
+    initialFieldValue: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var field by remember { mutableStateOf(initialFieldValue) }
 
-// Function to handle image upload
-fun UserViewModel.uploadImage(uri: Uri) {
-    val user = Firebase.auth.currentUser
-    val storageReference = Firebase.storage.reference.child("profileImages/${user?.uid}")
-    storageReference.putFile(uri)
-        .addOnSuccessListener {
-            storageReference.downloadUrl.addOnSuccessListener { downloadUri ->
-                user?.updateProfile(
-                    UserProfileChangeRequest.Builder()
-                    .setPhotoUri(downloadUri)
-                    .build())
-                    ?.addOnCompleteListener { profileUpdateTask ->
-                        if (profileUpdateTask.isSuccessful) {
-                            // Update photo URL in ViewModel
-                            setUser(user)
-                        }
-                    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Field") },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(field)
+                    onDismiss()
+                }
+            ) {
+                Text("Save")
             }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        text = {
+            TextField(
+                value = field,
+                onValueChange = { field = it },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
-        .addOnFailureListener { exception ->
-            Log.e("UserProfile", "Failed to upload image: ${exception.message}")
-        }
+    )
 }
+
+@Composable
+fun ConfirmDialogue(
+    text: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text)
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm() }
+            ) {
+                Text("Yes")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = { onDismiss() }
+            ) {
+                Text("No")
+            }
+        },
+        text = {}
+    )
+}
+

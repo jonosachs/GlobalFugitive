@@ -29,7 +29,8 @@ import com.google.maps.android.compose.rememberMarkerState
 fun GoogleMapsScreen(
     cameraPositionState: CameraPositionState,
     selectedLocation: LatLng?,
-    viewModel: GameViewModel
+    viewModel: GameViewModel,
+    onMapLoaded: () -> Unit
 ) {
     val context = LocalContext.current
     val targets by viewModel.guesses
@@ -80,16 +81,20 @@ fun GoogleMapsScreen(
                 mapToolbarEnabled = false,
                 scrollGesturesEnabled = true,
             ),
+            onMapLoaded = {
+                // Notify that the map has finished loading
+                onMapLoaded()
+            }
 
         ) {
             // Add a marker if a location is selected
             selectedLocation?.let { location ->
-                Marker(
-                    state = markerState,
-                    title = "",
-                    icon = BitmapDescriptorFactory.fromResource(R.drawable.crosshair_small),
-                    alpha = 0.8f
-                )
+//                Marker(
+//                    state = markerState,
+//                    title = "",
+//                    icon = BitmapDescriptorFactory.fromResource(R.drawable.crosshair_small),
+//                    alpha = 0.8f
+//                )
             }
 
             guessLatLong.forEach { target ->

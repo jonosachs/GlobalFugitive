@@ -1,5 +1,8 @@
 package com.example.globalfugitive
 
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -13,14 +16,21 @@ import androidx.compose.ui.unit.dp
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
-import com.example.globalfugitive.BuildConfig.WEB_CLIENT_ID
+import androidx.credentials.exceptions.NoCredentialException
+import com.example.globalfugitive.BuildConfig.APP_CLIENT_ID
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.GoogleAuthProvider.getCredential
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun GoogleSignInButton(
-    onGetCredentialResponse: (Credential) -> Unit
+    userViewModel: UserViewModel,
+    onGetCredentialResponse: (GetCredentialResponse) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -31,28 +41,43 @@ fun GoogleSignInButton(
         modifier = Modifier
             .clickable {
 
-                // Handle click event when the image is clicked
+                // Build the Google sign-in option
                 val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(WEB_CLIENT_ID)
+                    .setServerClientId(APP_CLIENT_ID)
                     .setAutoSelectEnabled(false)
                     .build()
 
-                val request: GetCredentialRequest = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
+                val signInWithGoogleOption: GetSignInWithGoogleOption =
+                    GetSignInWithGoogleOption.Builder(APP_CLIENT_ID)
                     .build()
 
+                // Create a GetCredentialRequest and add the googleIdOption
+                val credentialRequest = GetCredentialRequest.Builder()
+                    .addCredentialOption(signInWithGoogleOption)
+                    .build()
+
+                // Use coroutine to call CredentialManager.getCredential()
                 coroutineScope.launch {
                     try {
+                        // Get credentials asynchronously
                         val result = credentialManager.getCredential(
-                            request = request,
+                            request = credentialRequest,
                             context = context
                         )
 
-                        onGetCredentialResponse(result.credential)
+                        // Pass the result to your handler
+                        onGetCredentialResponse(result)
                     } catch (e: GetCredentialException) {
+                        if (e is NoCredentialException) {
+                            // Inform the user that no credentials were found and they might need to add an account
+                            userViewModel.setErrorMessage("No credentials available. Please add a Google account to your device.")
+                        } else {
+                            userViewModel.setErrorMessage("Get credentials failed")
+                            e.printStackTrace()
+                        }
                         println("Get credentials failed")
-                        println(e)
+                        e.printStackTrace()
                     }
                 }
             }

@@ -56,7 +56,6 @@ android {
             useSupportLibrary = true
         }
 
-
     }
 
 
@@ -148,7 +147,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
-
+    // Also add the dependency for the Google Play services library and specify its version
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
 
 //    implementation("androidx.credentials:credentials:1.5.0-alpha05")
 //    // optional - needed for credentials support from play services, for devices running
@@ -157,7 +157,6 @@ dependencies {
 
     
     //Authentication with Credential Manager
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("androidx.credentials:credentials:1.2.2")
     implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
@@ -176,6 +175,10 @@ dependencies {
 
     implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.1")
+
+    // Declare the dependency for the Cloud Firestore library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-firestore")
 
 
 }
