@@ -1,8 +1,11 @@
 package com.example.globalfugitive
 
 import GoogleMapsScreen
+import android.view.Gravity
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +23,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,7 +53,13 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.sp
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +76,8 @@ fun GamePlayScreen(
     }
 
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val placesClient: PlacesClient = remember { Places.createClient(context) }
     var searchQuery by remember { mutableStateOf("") }
     var predictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
@@ -114,6 +128,7 @@ fun GamePlayScreen(
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.padding(16.dp))
         }
+
     }
 
     //Footer box
@@ -165,6 +180,11 @@ fun GamePlayScreen(
                     .offset(y = 25.dp)
             )
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.Center),
+        )
 
         //Face response and text row
         Row(
@@ -236,7 +256,7 @@ fun GamePlayScreen(
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        text = "${index + 1}. $target",
+                        text = "${index + 1}. ${target.split(" ").joinToString(" ") { it.capitalize() }}",
                         modifier = Modifier
                             .offset(x = 30.dp)
 
@@ -287,30 +307,51 @@ fun GamePlayScreen(
                             if (predictions.isNotEmpty()) {
                                 val firstPrediction = predictions[0]
                                 val latLng = getLatLngFromPrediction(context, firstPrediction)
-                                if (latLng != null && gameViewModel.validGuess(searchQuery)) {
-                                    println("Updating selected location to: $latLng")
-                                    selectedLocation = latLng // Update the selected location
 
-                                    // Add guess to list of prior guesses if valid
-                                    gameViewModel.addGuess(searchQuery, latLng)
+                                if (gameViewModel.validGuess(searchQuery) && latLng != null) {
 
-                                    // Check if game over conditions met
-                                    if (gameViewModel.gameEnd(searchQuery)) {
-                                        println("gameWon value @ GamePlayScreen: ${gameViewModel.gameWon.value}")
-                                        navController.navigate("EndGame")
-                                    }
+                                        println("Updating selected location to: $latLng")
+                                        selectedLocation = latLng // Update the selected location
+
+                                        // Add guess to list of prior guesses if valid
+                                        gameViewModel.addGuess(searchQuery, latLng)
+
+                                        // Check if game over conditions met
+                                        if (gameViewModel.gameEnd(searchQuery)) {
+                                            println("gameWon value @ GamePlayScreen: ${gameViewModel.gameWon.value}")
+                                            navController.navigate("EndGame")
+                                        }
 
                                 } else {
-                                    println("Failed to get LatLng from prediction.")
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            message = "Choose a unique country!",
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    }
+                                }
+
+                            } else {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = "Country is not recognised!",
+                                        duration = SnackbarDuration.Short
+                                    )
                                 }
                             }
 
                             // Reset text field to blank after guess
                             searchQuery = ""
 
+                        } else {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "Please choose a country!",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
                         }
                     }
-
                 },
                 modifier = Modifier
                     .align(alignment = Alignment.CenterVertically)
@@ -377,6 +418,5 @@ fun GamePlayScreen(
         } //close lazy column row
     } //close main content box
 } //close composable
-
 
 
