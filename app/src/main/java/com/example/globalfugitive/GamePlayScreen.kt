@@ -70,7 +70,7 @@ fun GamePlayScreen(
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) } // Shared selected location
     val coroutineScope = rememberCoroutineScope()
     var lazyColumnVisible by remember { mutableStateOf(true) }
-    val targets by gameViewModel.guesses
+    val guesses by gameViewModel.guesses
     val mysteryCountry by gameViewModel.mysteryCountry
     val guessDistance by gameViewModel.guessDistance
     var isLoading by remember { mutableStateOf(true) }
@@ -206,7 +206,7 @@ fun GamePlayScreen(
             Column(
 //                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (targets.isNotEmpty()) {
+                if (guesses.isNotEmpty()) {
                     Text(
                         text = "Targets",
                         style = MaterialTheme.typography.bodyLarge,
@@ -230,7 +230,7 @@ fun GamePlayScreen(
 
                 }
 
-                targets.forEachIndexed { index, target ->
+                guesses.forEachIndexed { index, target ->
                     Text(
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.White,

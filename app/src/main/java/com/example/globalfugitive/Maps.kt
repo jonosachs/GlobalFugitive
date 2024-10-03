@@ -64,9 +64,6 @@ fun GoogleMapsScreen(
         .fillMaxWidth()
     ) {
         // Google Map Composable
-
-
-
         GoogleMap(
             modifier = Modifier
                 .padding(0.dp)

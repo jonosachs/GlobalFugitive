@@ -15,15 +15,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,7 +41,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -51,7 +50,6 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
@@ -60,32 +58,27 @@ fun UserProfile(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.ROOT)
+
     val user = userViewModel.currentUser
 
-    var isEditing by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     var fieldToEdit by remember { mutableStateOf("") }
-    var currentField by remember { mutableStateOf("") }
+    var editedValue by remember { mutableStateOf("") }
 
-    var showConfirmDelete by remember { mutableStateOf(false) }
-    var showConfirmResetEmail by remember { mutableStateOf(false) }
+    val userId = user?.userId.orEmpty()
+    val email = user?.email.orEmpty()
+    val displayName = user?.displayName.orEmpty()
+    val dateOfBirth = user?.dateOfBirth?.let { formatter.format(Date(it)) } ?: ""
+    val gender = user?.gender.orEmpty()
 
-    //Date picker
+    var showGenderMenu by remember { mutableStateOf(false) }
+    var selectedGender by remember { mutableStateOf(user?.gender) }
+
     val calendar = Calendar.getInstance()
-    // Create a DatePicker state and initialize it with the selected date
-    var selectedDate by remember { mutableStateOf(calendar.timeInMillis) }
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate)
-    var dateOfBirth by remember { mutableStateOf(user?.dateOfBirth) }
     var showDatePicker by remember { mutableStateOf(false) }
-
-    // Fields with an "editable" flag
-    val fields = listOf(
-        Triple("UserId", user?.userId.orEmpty(), false),  // Non-editable
-        Triple("Display Name", user?.displayName.orEmpty(), true),  // Editable
-        Triple("Email", user?.email.orEmpty(), false),  // Non-editable
-        Triple("Date of Birth", dateOfBirth?.let { Date(it) }?.let { formatDate(it) }, true),  // Editable as date picker
-        Triple("Gender", user?.gender.orEmpty(), true),  // Editable
-    )
+    var selectedDateOfBirth by remember { mutableStateOf(user?.dateOfBirth ?: System.currentTimeMillis()) }
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDateOfBirth)
 
     Column(
         modifier = modifier
@@ -97,176 +90,112 @@ fun UserProfile(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Display user profile picture
-        user?.photoUrl?.let {
-            Image(
-                painter = rememberAsyncImagePainter(it),
-                contentDescription = "User Profile Picture",
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, Color.Gray, CircleShape)
-                    .clickable { /* Handle profile picture click here */ }
-            )
-        } ?: run {
-            Image(
-                painter = painterResource(id = R.drawable.account_circle),
-                contentDescription = "Default Profile Picture",
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, Color.Gray, CircleShape)
-                    .clickable { /* Handle profile picture click */ }
-            )
+        // Profile Picture and Header
+        ProfilePicture(user)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Display each field with an edit option if applicable
+        UserProfileField("User ID", userId, isEditable = false)
+        UserProfileField("Email", email, isEditable = false)
+        UserProfileField("Display Name", displayName, isEditable = true) {
+            fieldToEdit = "Display Name"
+            editedValue = displayName
+            showEditDialog = true
+        }
+        UserProfileField("Date of Birth", dateOfBirth, isEditable = true) {
+            fieldToEdit = "Date of Birth"
+            editedValue = selectedDateOfBirth.toString()
+            showDatePicker = true
+        }
+        UserProfileField("Gender", gender, isEditable = true) {
+            fieldToEdit = "Gender"
+            editedValue = selectedGender.orEmpty()
+            showGenderMenu = true
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = "User Profile", style = MaterialTheme.typography.headlineLarge)
+        // Reset Password and Delete Account
+        ProfileActions(navController, userViewModel)
 
-        LazyColumn(modifier = Modifier.fillMaxWidth()) {
-            items(fields.size) { index ->
-                val (label, value, isEditable) = fields[index]
-                // Show normal UserDataField for other fields
-                UserDataField(
-                    field = label,
-                    value = value.orEmpty(),  // Pass the current field value
-                    isEditable = isEditable,
-                    onEdit = {
-                        if (isEditable) {
-                            fieldToEdit = label
-                            currentField = value.orEmpty()
-                            isEditing = true
-                        }
-                    },
-                    onIsDate = { showDatePicker = true },
-                    onIsGender = { },
-                )
-            }
+        // Edit Dialog
+        if (showEditDialog) {
+            EditDialog(
+                field = fieldToEdit,
+                value = editedValue,
+                onDismiss = { showEditDialog = false },
+                onSave = { newValue ->
+                    when (fieldToEdit) {
+                        "Display Name" -> userViewModel.updateUserField(userId, "displayName", newValue, {}, {})
+                        "Date of Birth" -> userViewModel.updateUserField(userId, "dateOfBirth", newValue, {}, {})
+                        "Gender" -> userViewModel.updateUserField(userId, "gender", newValue, {}, {})
+                    }
+                    showEditDialog = false
+                }
+            )
         }
 
+
+        // DatePicker for Date of Birth
         if (showDatePicker) {
             DatePickerDialog(
-                onDismissRequest = {
-                    showDatePicker = false
-                },
+                onDismissRequest = { showDatePicker = false },
                 confirmButton = {
-                    TextButton(
-                        onClick = {
-                            userViewModel.clearErrorMessage()
-                            showDatePicker = false
-                            selectedDate = datePickerState.selectedDateMillis ?: calendar.timeInMillis
-                        }
-                    ) {
-                        Text(text = "OK")
-                    }
+                    TextButton(onClick = {
+                        showDatePicker = false
+                        selectedDateOfBirth = datePickerState.selectedDateMillis ?: calendar.timeInMillis
+                        userViewModel.updateUserField(
+                            userId = user?.userId ?: "",
+                            field = "dateOfBirth",
+                            value = selectedDateOfBirth,
+                            onSuccess = { /* Handle Success */ },
+                            onFailure = { /* Handle Failure */ }
+                        )
+                    }) { Text("OK") }
                 },
-                dismissButton = {
-                    TextButton(
-                        onClick = {showDatePicker = false}
-                    ) {
-                        Text(text = "Cancel")
-                    }
-                }
+                dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancel") } },
             ) {
                 DatePicker( state = datePickerState )
             }
-        }// end of if
-
-
-        if (isEditing) {
-            EditUserDataField(
-                initialFieldValue = currentField,
-                onDismiss = { isEditing = false },
-                onSave = { updatedField ->
-                    val fieldName = when (fieldToEdit) {
-                        "Display Name" -> "displayName"
-                        "Gender" -> "gender"
-                        else -> null
-                    }
-
-                    fieldName?.let { field ->
-                        user?.userId?.let { userId ->
-                            userViewModel.updateUserField(
-                                userId = userId,
-                                field = field,
-                                value = updatedField,
-                                onSuccess = { /* Handle success */ },
-                                onFailure = { /* Handle failure */ }
-                            )
-                        }
-                    }
-                    isEditing = false
-                }
-            )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Password Reset Button
-        Button(onClick = { showConfirmResetEmail = true }) {
-            Text("Reset Password")
-        }
-
-        if (showConfirmResetEmail) {
-            ConfirmDialogue(
-                text = "Reset email? A message will be sent to your registered email address.",
-                onConfirm = {
-                    user?.email?.let { email ->
-                        userViewModel.sendPasswordResetEmail(email)
-                    }
-                    showConfirmResetEmail = false
+        // Dropdown Menu for Gender
+        if (showGenderMenu) {
+            GenderDropdownMenu(
+                selectedGender = selectedGender.orEmpty(),
+                onGenderSelected = { gender ->
+                    selectedGender = gender
+                    showGenderMenu = false
+                    userViewModel.updateUserField(
+                        userId = user?.userId ?: "",
+                        field = "gender",
+                        value = gender,
+                        onSuccess = { /* Handle Success */ },
+                        onFailure = { /* Handle Failure */ }
+                    )
                 },
-                onDismiss = { showConfirmResetEmail = false }
-            )
-        }
-
-        // Delete account
-        Button(onClick = { showConfirmDelete = true }) {
-            Text("Delete Account")
-        }
-
-        if (showConfirmDelete) {
-            ConfirmDialogue(
-                text = "Warning: Are you sure you want to delete your account?",
-                onConfirm = {
-                    userViewModel.deleteUser {
-                        navController.navigate("SignInScreen") {
-                            popUpTo("SignInScreen") { inclusive = true }
-                        }
-                    }
-                    showConfirmDelete = false
-                },
-                onDismiss = { showConfirmDelete = false }
+                onDismiss = { showGenderMenu = false }
             )
         }
     }
+
+
+
 }
-
-
-fun formatDate(date: Date): String {
-    val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    return formatter.format(date)
-}
-
 
 @Composable
-fun UserDataField(
+fun UserProfileField(
     field: String,
     value: String,
     isEditable: Boolean,
-    onEdit: () -> Unit,
-    onIsDate: () -> Unit,
-    onIsGender: () -> Unit
+    onEdit: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .background(
-                Color.LightGray,
-                shape = MaterialTheme.shapes.medium
-            )
+            .background(Color.LightGray, shape = MaterialTheme.shapes.medium)
             .padding(16.dp)
             .clip(MaterialTheme.shapes.medium),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -274,46 +203,39 @@ fun UserDataField(
     ) {
         Text(text = "$field: $value", modifier = Modifier.weight(1f))
 
-        if (isEditable) {
-            if (field == "Date of Birth") {
-                IconButton(onClick = onIsDate) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Edit")
-                }
-            } else if (field == "Gender") {
-                IconButton(onClick = onIsGender) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Edit")
-                }
-            } else {
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
-                }
+        if (isEditable && onEdit != null) {
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, contentDescription = "Edit $field")
             }
         }
-
-
-
     }
 }
 
 
 @Composable
-fun EditUserDataField(
-    initialFieldValue: String,
+fun EditDialog(
+    field: String,
+    value: String,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit
 ) {
-    var field by remember { mutableStateOf(initialFieldValue) }
+    var editedValue by remember { mutableStateOf(value) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Field") },
+        title = { Text("Edit $field") },
+        text = {
+            TextField(
+                value = editedValue,
+                onValueChange = { editedValue = it },
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
         confirmButton = {
-            Button(
-                onClick = {
-                    onSave(field)
-                    onDismiss()
-                }
-            ) {
+            Button(onClick = {
+                onSave(editedValue)
+                onDismiss()
+            }) {
                 Text("Save")
             }
         },
@@ -321,43 +243,116 @@ fun EditUserDataField(
             Button(onClick = onDismiss) {
                 Text("Cancel")
             }
-        },
-        text = {
-            TextField(
-                value = field,
-                onValueChange = { field = it },
-                modifier = Modifier.fillMaxWidth()
-            )
         }
     )
 }
 
+
 @Composable
-fun ConfirmDialogue(
+fun ProfilePicture(user: User?) {
+    user?.photoUrl?.let {
+        Image(
+            painter = rememberAsyncImagePainter(it),
+            contentDescription = "User Profile Picture",
+            modifier = Modifier
+                .size(100.dp)
+                .clip(CircleShape)
+                .border(2.dp, Color.Gray, CircleShape)
+                .clickable { /* Handle profile picture click here */ }
+        )
+    } ?: run {
+        Image(
+            painter = painterResource(id = R.drawable.account_circle),
+            contentDescription = "Default Profile Picture",
+            modifier = Modifier
+                .size(100.dp)
+                .clip(CircleShape)
+                .border(2.dp, Color.Gray, CircleShape)
+        )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+@Composable
+fun ProfileActions(navController: NavController, userViewModel: UserViewModel) {
+    var showConfirmDelete by remember { mutableStateOf(false) }
+    var showConfirmResetEmail by remember { mutableStateOf(false) }
+
+    Button(onClick = { showConfirmResetEmail = true }) {
+        Text("Reset Password")
+    }
+    if (showConfirmResetEmail) {
+        ConfirmDialog(
+            text = "Reset email? A message will be sent to your registered email address.",
+            onConfirm = {
+                userViewModel.sendPasswordResetEmail(userViewModel.currentUser?.email ?: "")
+                showConfirmResetEmail = false
+            },
+            onDismiss = { showConfirmResetEmail = false }
+        )
+    }
+
+    Button(onClick = { showConfirmDelete = true }) {
+        Text("Delete Account")
+    }
+    if (showConfirmDelete) {
+        ConfirmDialog(
+            text = "Are you sure you want to delete your account?",
+            onConfirm = {
+                userViewModel.deleteUser {
+                    navController.navigate("SignInScreen") {
+                        popUpTo("SignInScreen") { inclusive = true }
+                    }
+                }
+                showConfirmDelete = false
+            },
+            onDismiss = { showConfirmDelete = false }
+        )
+    }
+}
+
+@Composable
+fun ConfirmDialog(
     text: String,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(text)
-        },
+        text = { Text(text) },
         confirmButton = {
-            Button(
-                onClick = { onConfirm() }
-            ) {
+            Button(onClick = onConfirm) {
                 Text("Yes")
             }
         },
         dismissButton = {
-            Button(
-                onClick = { onDismiss() }
-            ) {
+            Button(onClick = onDismiss) {
                 Text("No")
             }
-        },
-        text = {}
+        }
     )
 }
+
+@Composable
+fun GenderDropdownMenu(
+    selectedGender: String,
+    onGenderSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val genders = listOf("Male", "Female", "Other")
+
+    DropdownMenu(
+        expanded = true,
+        onDismissRequest = onDismiss
+    ) {
+        genders.forEach { gender ->
+            DropdownMenuItem(
+                text = { Text(text = gender) },
+                onClick = { onGenderSelected(gender) }
+            )
+        }
+    }
+}
+
+
 
