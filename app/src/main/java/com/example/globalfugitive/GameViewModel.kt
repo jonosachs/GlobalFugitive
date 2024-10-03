@@ -133,7 +133,7 @@ class GameViewModel(
 //        return jsonArray
 //    }
 
-    private suspend fun getRandomCountry(): Country? {
+    suspend fun getRandomCountry(): Country? {
         val countryCount = countryDao.getCountryCount()
 
         if (countryCount == 0) return null

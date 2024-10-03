@@ -15,24 +15,32 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.coroutineScope
 
 
 @Composable
 fun MainMenu(
     navController: NavController,
-    userViewModel: UserViewModel,
-    modifier: Modifier
+    retrofitViewModel: RetrofitViewModel,
 ) {
 
-//    val currentUserEmail = userViewModel.currentUser?.email
-
+    // Get the weather data from the view model
+    val weatherData by remember { retrofitViewModel.retrofitResponse }
+    val context = LocalContext.current
+    // Get random city for weather report
+    val randomCityName = remember { getRandomCity(context) }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -72,9 +80,15 @@ fun MainMenu(
             verticalArrangement = Arrangement.Center,
 
         ) {
+
+            Spacer(modifier = Modifier.height(32.dp))
+
             Button(
-                onClick = { navController.navigate("GamePlayScreen") {
-                    popUpTo("GamePlayScreen") { inclusive = true } } },
+                onClick = {
+                    navController.navigate("GamePlayScreen") {
+                        popUpTo("GamePlayScreen") { inclusive = true }
+                    }
+                },
                 modifier = Modifier.width(200.dp),
             ) {
                 Text("Single Player")
@@ -91,7 +105,36 @@ fun MainMenu(
             ) {
                 Text("Quit")
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+
+            LaunchedEffect(key1 = randomCityName) {
+                retrofitViewModel.getResponse(randomCityName) // Fetch weather data for the selected country
+            }
+
+            weatherData?.let {
+                Text(
+                    text = "${it.location.name}, ${it.location.country}",
+                    color = Color.Red
+                )
+                Text(
+                    text = "${it.current.temp_c} °C",
+                    color = Color.Red
+                )
+                Text(
+                    text = "${it.current.condition.text}",
+                    color = Color.Red
+                )
+
+            } ?: run {
+                Text(
+                    text = "Loading weather data...",
+                    color = Color.Red
+                )
+            }
         }
+
         Image(
             painter = painterResource(id = R.drawable.heatmap_footer),
             contentDescription = "",
@@ -105,3 +148,4 @@ fun MainMenu(
         )
     }
 }
+

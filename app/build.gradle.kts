@@ -93,6 +93,7 @@ dependencies {
 
     implementation(libs.google.googleid)
     implementation(libs.androidx.room.common)
+//    implementation(libs.androidx.media3.common.ktx)
     // test, debug
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -180,5 +181,8 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-firestore")
 
+    //Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
 }

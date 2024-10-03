@@ -16,7 +16,8 @@ fun AppNavigation(
     gameViewModel: GameViewModel,
     userViewModel: UserViewModel,
     startDestination: String,
-    navController: NavHostController
+    navController: NavHostController,
+    retrofitViewModel: RetrofitViewModel
 ) {
 
     NavHost(
@@ -32,7 +33,8 @@ fun AppNavigation(
             DrawerNavigation(
                 parentNavController = navController, // Pass parent NavController
                 nestedNavController = nestedNavController, // Nested NavController for the drawer menu
-                userViewModel = userViewModel
+                userViewModel = userViewModel,
+                retrofitViewModel = retrofitViewModel
             )
         }
         composable("GamePlayScreen") { GamePlayScreen(navController, gameViewModel, userViewModel) }

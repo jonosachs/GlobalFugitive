@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
 
     private val countryViewModel: CountryViewModel by viewModels()
 
+
     private lateinit var gameViewModel: GameViewModel
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
@@ -49,7 +50,8 @@ class MainActivity : ComponentActivity() {
 
         // Create ViewModels and Repositories in the Activity scope
         val userViewModel = UserViewModel()
-//        val gameViewModel = GameViewModel(countryDao, application)
+        val retrofitViewModel = RetrofitViewModel()
+
 
         enableEdgeToEdge()
 
@@ -73,6 +75,7 @@ class MainActivity : ComponentActivity() {
                     gameViewModel = gameViewModel,
                     userViewModel = userViewModel,
                     startDestination = startDestination,
+                    retrofitViewModel = retrofitViewModel,
                     navController = navController
                 )
             }

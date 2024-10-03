@@ -32,7 +32,8 @@ import kotlinx.coroutines.launch
 fun DrawerNavigation(
     parentNavController: NavController,
     nestedNavController: NavHostController,
-    userViewModel: UserViewModel
+    userViewModel: UserViewModel,
+    retrofitViewModel: RetrofitViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
@@ -64,7 +65,7 @@ fun DrawerNavigation(
             navController = nestedNavController,
             startDestination = "MainMenu" // Default start screen inside drawer menu
         ) {
-            composable("MainMenu") { MainMenu(parentNavController, userViewModel, modifier = Modifier) }
+            composable("MainMenu") { MainMenu(parentNavController, retrofitViewModel) }
             composable("UserProfile") { UserProfile(userViewModel, parentNavController) }
             composable("SignInScreen") { SignInScreen(userViewModel, parentNavController) }
         }
