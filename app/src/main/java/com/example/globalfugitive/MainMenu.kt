@@ -1,5 +1,6 @@
 package com.example.globalfugitive
 
+import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -91,16 +92,18 @@ fun MainMenu(
                 },
                 modifier = Modifier.width(200.dp),
             ) {
-                Text("Single Player")
+                Text("New Game")
             }
+//            Button(
+//                onClick = { navController.navigate("") },
+//                modifier = Modifier.width(200.dp),
+//            ) {
+//                Text("2-Player")
+//            }
             Button(
-                onClick = { navController.navigate("") },
-                modifier = Modifier.width(200.dp),
-            ) {
-                Text("2-Player")
-            }
-            Button(
-                onClick = { navController.navigate("") },
+                onClick = {
+                    (context as? Activity)?.finishAffinity()
+                },
                 modifier = Modifier.width(200.dp),
             ) {
                 Text("Quit")

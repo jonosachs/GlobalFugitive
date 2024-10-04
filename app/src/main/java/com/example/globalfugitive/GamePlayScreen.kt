@@ -1,11 +1,9 @@
 package com.example.globalfugitive
 
 import GoogleMapsScreen
-import android.view.Gravity
-import android.widget.Toast
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,16 +50,10 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.sp
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.util.Locale
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GamePlayScreen(
@@ -224,19 +216,22 @@ fun GamePlayScreen(
 
             //Text
             Column(
-//                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.width(225.dp)
             ) {
-                if (guesses.isNotEmpty()) {
-                    Text(
-                        text = "Targets",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        textDecoration = TextDecoration.Underline,
-                        modifier = Modifier
-                            .offset(x = 30.dp)
+                val xoffset = 40.dp
+                val textStyle = MaterialTheme.typography.bodyLarge
 
-                    )
+                if (guesses.isNotEmpty()) {
+//                    Text(
+//                        text = "Targets",
+//                        style = textStyle,
+//                        color = Color.White,
+//                        fontWeight = FontWeight.Bold,
+//                        textDecoration = TextDecoration.Underline,
+//                        modifier = Modifier
+//                            .offset(x = xoffset)
+//
+//                    )
                 } else {
                     Column(modifier = Modifier.width(150.dp)) {
                         Text(
@@ -244,21 +239,35 @@ fun GamePlayScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.White,
                             modifier = Modifier
-                                .offset(x = 30.dp)
+                                .offset(x = xoffset)
                         )
                     }
 
                 }
 
                 guesses.forEachIndexed { index, target ->
+
+                    // Captialise country names
+                    val regex = """[A-Za-zÀ-ÿ0-9]+|[^\w\s]+|\s+""".toRegex()
+
+                    val capitalizedResult = regex.findAll(target)
+                        .joinToString("") { matchResult ->
+                            val part = matchResult.value
+                            if (part.first().isLetter()) {
+                                part.replaceFirstChar { it.uppercaseChar() }
+                            } else {
+                                part // Keep delimiters as they are
+                            }
+                        }
+
                     Text(
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = textStyle,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        text = "${index + 1}. ${target.split(" ").joinToString(" ") { it.capitalize() }}",
+                        text = "${index + 1}. $capitalizedResult",
                         modifier = Modifier
-                            .offset(x = 30.dp)
+                            .offset(x = xoffset)
 
                     )
                 }
@@ -308,29 +317,28 @@ fun GamePlayScreen(
                                 val firstPrediction = predictions[0]
                                 val latLng = getLatLngFromPrediction(context, firstPrediction)
 
-                                if (gameViewModel.validGuess(searchQuery) && latLng != null) {
+                                if (latLng != null && gameViewModel.validGuess(searchQuery)) {
 
-                                        println("Updating selected location to: $latLng")
-                                        selectedLocation = latLng // Update the selected location
+                                    println("Updating selected location to: $latLng")
+                                    selectedLocation = latLng // Update the selected location
 
-                                        // Add guess to list of prior guesses if valid
-                                        gameViewModel.addGuess(searchQuery, latLng)
+                                    // Add guess to list of prior guesses if valid
+                                    gameViewModel.addGuess(searchQuery, latLng)
 
-                                        // Check if game over conditions met
-                                        if (gameViewModel.gameEnd(searchQuery)) {
-                                            println("gameWon value @ GamePlayScreen: ${gameViewModel.gameWon.value}")
-                                            navController.navigate("EndGame")
-                                        }
+                                    // Check if game over conditions met
+                                    if (gameViewModel.gameEnd(searchQuery)) {
+                                        println("gameWon value @ GamePlayScreen: ${gameViewModel.gameWon.value}")
+                                        navController.navigate("EndGame")
+                                    }
 
                                 } else {
                                     coroutineScope.launch {
                                         snackbarHostState.showSnackbar(
-                                            message = "Choose a unique country!",
+                                            message = "Invalid guess: Please try again!",
                                             duration = SnackbarDuration.Short
                                         )
                                     }
                                 }
-
                             } else {
                                 coroutineScope.launch {
                                     snackbarHostState.showSnackbar(
@@ -346,7 +354,7 @@ fun GamePlayScreen(
                         } else {
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar(
-                                    message = "Please choose a country!",
+                                    message = "No search query: Please choose a country!",
                                     duration = SnackbarDuration.Short
                                 )
                             }

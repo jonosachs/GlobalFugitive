@@ -36,6 +36,7 @@ class GameViewModel(
     var mysteryLat = mutableStateOf<Double?>(null)
         private set
     var mysteryLong = mutableStateOf<Double?>(null)
+    var mysteryFlag = mutableStateOf<String?>(null)
     var guessDistance = mutableStateOf<Int?>(null)
     var guessesLatLng = mutableStateOf<List<LatLng>>(emptyList())
     var gameWon = mutableStateOf<Boolean?>(null)
@@ -60,12 +61,15 @@ class GameViewModel(
     }
 
     fun correctGuess(guess: String): Boolean {
-        return guess.lowercase() == mysteryCountry.value.toString().lowercase()
+        return mysteryCountry.value.toString().lowercase().contains(guess.lowercase()) ||
+                guess.lowercase().contains(mysteryCountry.value.toString())
     }
 
+
     fun validGuess(guess: String): Boolean {
-        return countries.value?.contains(guess.lowercase()) == true &&
-                !guesses.value.toString().lowercase().contains(guess.lowercase()) &&
+        val convertedGuess = countries.value?.find { it.contains(guess, ignoreCase = true) }
+        return countries.value?.contains(convertedGuess) == true &&
+                !guesses.value.toString().lowercase().contains(convertedGuess!!) &&
                 guesses.value.size < 5
     }
 
@@ -80,15 +84,23 @@ class GameViewModel(
         val distanceString = formatter.format(guessDistance.value)
 
         if(validGuess(guess)) {
-            if (correctGuess(guess)) {
-                guesses.value += "$guess ✅"
+
+            val convertedGuess = countryNameFromRepo(guess)
+
+            if (correctGuess(convertedGuess)) {
+                guesses.value += "$convertedGuess ✅"
             }
             else {
-                guesses.value += "$guess ${distanceString}km  ❌"
+                guesses.value += "$convertedGuess ${distanceString}km  ❌"
                 guessesLatLng.value += guessLatLng
             }
-
         }
+
+    }
+
+    fun countryNameFromRepo(guess: String): String {
+        val converted = countries.value?.find { it.contains(guess, ignoreCase = true) }
+        return converted!!.lowercase()
     }
 
     fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Int {
@@ -117,6 +129,7 @@ class GameViewModel(
         mysteryLat.value = randomCountry?.latitude
         mysteryLong.value = randomCountry?.longitude
         mysteryCountry.value = randomCountry?.name
+        mysteryFlag.value = randomCountry?.emoji
         guesses.value = emptyList()
         gameWon.value = null
         guessesLatLng.value = emptyList()
@@ -153,9 +166,12 @@ class GameViewModel(
                 // Iterate through the countries and extract names
                 for (country in listOfCountries) {
                     countryNames.add(country.name.lowercase())
-                    country.iso2?.let { countryNames.add(it.lowercase()) }
-                    country.iso3?.let { countryNames.add(it.lowercase()) }
+                    country.iso2.let { countryNames.add(it.lowercase()) }
+                    country.iso3.let { countryNames.add(it.lowercase()) }
+//                    country.translations.let {countryNames.add(it.toString().lowercase()) }
                 }
+
+                println(countryNames[0])
 
                 // Post the extracted country names to LiveData
                 _countries.postValue(countryNames)

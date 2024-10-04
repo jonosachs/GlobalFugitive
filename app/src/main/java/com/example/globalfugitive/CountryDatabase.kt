@@ -21,8 +21,9 @@ abstract class CountryDatabase : RoomDatabase() {
                     CountryDatabase::class.java,
                     "country_database"
                 )
-                .addCallback(CountryDatabaseCallback(context))
-                .build()
+                    .addCallback(CountryDatabaseCallback(context))
+//                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

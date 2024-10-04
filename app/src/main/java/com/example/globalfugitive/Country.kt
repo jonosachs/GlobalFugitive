@@ -13,7 +13,8 @@ data class Country(
     val region: String,
     val latitude: Double,
     val longitude: Double,
-    val emoji: String
+    val emoji: String,
+//    val translations: String
 )
 
 
