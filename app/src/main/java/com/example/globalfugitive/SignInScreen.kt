@@ -131,6 +131,17 @@ fun SignInScreen(
             Text("Sign Up")
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = {
+                (context as? Activity)?.finishAffinity()
+            },
+            modifier = Modifier.width(200.dp)
+        ) {
+            Text("Quit")
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         GoogleSignInButton(userViewModel) { credential ->
