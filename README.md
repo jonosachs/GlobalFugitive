@@ -1,6 +1,16 @@
-Country guessing game for Andriod made with Kotlin
+# Global Fugitive
 
-<img width="1130" alt="image" src="https://github.com/user-attachments/assets/0413f319-80e6-4191-b01b-bea96ca899e5">
+Country guessing game for Andriod made with Kotlin using Andriod Studio
 
-<img width="1153" alt="image" src="https://github.com/user-attachments/assets/d9aaaa65-8ba4-4a01-a1df-58ddf8459c86">
+Also uses:
 
+-Firebase for authentication, coupled with Firestore cloud database to store additional user data
+
+-Google Maps and Google Places SDK’s to display the maps and search interface
+
+-sign in with Google
+
+-WeatherAPI.com
+
+
+![globalfugitive](https://github.com/user-attachments/assets/5785b0b6-4e5a-4a08-9871-f662ee8af7a8)
