@@ -2,14 +2,10 @@
 
 Country guessing game for Andriod made with Kotlin using Andriod Studio
 
-Also uses:
-
--Firebase for authentication, coupled with Firestore cloud database to store additional user data
-
--Google Maps and Google Places SDK’s to display the maps and search interface
-
--sign in with Google
-
+Also uses: \
+-Firebase for authentication, coupled with Firestore cloud database to store additional user data \
+-Google Maps and Google Places SDK’s to display the maps and search interface \
+-sign in with Google \
 -WeatherAPI.com
 
 
